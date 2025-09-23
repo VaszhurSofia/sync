@@ -1,0 +1,311 @@
+{
+  "tier1": {
+    "self_harm": {
+      "patterns": [
+        "kill myself",
+        "end my life",
+        "suicide",
+        "self harm",
+        "hurt myself",
+        "cut myself",
+        "overdose",
+        "hang myself",
+        "jump off",
+        "drive into",
+        "take pills",
+        "not worth living",
+        "better off dead",
+        "want to die",
+        "end it all"
+      ],
+      "risk_level": "high",
+      "action": "block"
+    },
+    "violence": {
+      "patterns": [
+        "kill you",
+        "hurt you",
+        "beat you",
+        "hit you",
+        "punch you",
+        "stab you",
+        "shoot you",
+        "threaten you",
+        "violence against",
+        "physical harm",
+        "assault you",
+        "attack you"
+      ],
+      "risk_level": "high",
+      "action": "block"
+    },
+    "abuse": {
+      "patterns": [
+        "abuse you",
+        "manipulate you",
+        "control you",
+        "gaslight you",
+        "intimidate you",
+        "bully you",
+        "harass you",
+        "stalk you",
+        "threaten you",
+        "coerce you"
+      ],
+      "risk_level": "high",
+      "action": "block"
+    }
+  },
+  "tier2": {
+    "emotional_distress": {
+      "patterns": [
+        "feel like dying",
+        "want to disappear",
+        "can't go on",
+        "hopeless",
+        "worthless",
+        "useless",
+        "hate myself",
+        "despise myself",
+        "ruin everything",
+        "screw up",
+        "failure",
+        "disappointment"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    },
+    "relationship_abuse": {
+      "patterns": [
+        "make you pay",
+        "teach you a lesson",
+        "show you who's boss",
+        "put you in your place",
+        "you'll regret this",
+        "you'll be sorry",
+        "consequences",
+        "punish you",
+        "get back at you",
+        "revenge"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    },
+    "manipulation": {
+      "patterns": [
+        "if you loved me",
+        "you don't care",
+        "you never listen",
+        "you always",
+        "you never",
+        "typical of you",
+        "you're just like",
+        "you always do this",
+        "you never understand",
+        "you don't get it"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    }
+  },
+  "red_team": {
+    "euphemisms": {
+      "patterns": [
+        "unalive myself",
+        "delete myself",
+        "uninstall life",
+        "log out forever",
+        "quit life",
+        "game over",
+        "check out early",
+        "off myself",
+        "do myself in",
+        "end the pain",
+        "find peace",
+        "rest forever",
+        "sleep forever",
+        "never wake up",
+        "go to sleep"
+      ],
+      "risk_level": "high",
+      "action": "block"
+    },
+    "slang": {
+      "patterns": [
+        "kms",
+        "kys",
+        "unalive",
+        "yeet myself",
+        "delete me",
+        "uninstall me",
+        "ctrl+alt+delete",
+        "alt+f4 life",
+        "blue screen of death",
+        "system crash",
+        "fatal error",
+        "core dump",
+        "segfault",
+        "null pointer",
+        "stack overflow"
+      ],
+      "risk_level": "high",
+      "action": "block"
+    },
+    "coded_language": {
+      "patterns": [
+        "going on vacation",
+        "taking a long nap",
+        "going to sleep",
+        "resting",
+        "peaceful",
+        "quiet place",
+        "better place",
+        "no more pain",
+        "end the suffering",
+        "final solution",
+        "permanent fix",
+        "one way ticket",
+        "no return",
+        "goodbye forever",
+        "see you never"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    },
+    "relationship_euphemisms": {
+      "patterns": [
+        "teach you respect",
+        "show you reality",
+        "wake you up",
+        "open your eyes",
+        "make you see",
+        "put you straight",
+        "set you right",
+        "correct you",
+        "fix you",
+        "improve you",
+        "help you understand",
+        "make you realize",
+        "show you truth",
+        "enlighten you"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    },
+    "threats_disguised": {
+      "patterns": [
+        "you'll see",
+        "just wait",
+        "mark my words",
+        "you'll find out",
+        "time will tell",
+        "you'll understand",
+        "you'll learn",
+        "you'll regret",
+        "you'll remember",
+        "you'll know",
+        "you'll see what happens",
+        "consequences coming",
+        "what goes around",
+        "karma",
+        "payback"
+      ],
+      "risk_level": "medium",
+      "action": "warn"
+    }
+  },
+  "false_positives": {
+    "normal_conflict": {
+      "patterns": [
+        "this is killing me",
+        "you're driving me crazy",
+        "I'm dying to know",
+        "I could kill for",
+        "this is murder",
+        "you're killing me",
+        "I'm dead tired",
+        "drop dead",
+        "go to hell",
+        "damn it",
+        "what the hell",
+        "hell no",
+        "screw you",
+        "fuck this",
+        "shit happens"
+      ],
+      "risk_level": "low",
+      "action": "allow"
+    },
+    "metaphors": {
+      "patterns": [
+        "heart is breaking",
+        "soul crushing",
+        "mind blowing",
+        "life changing",
+        "world ending",
+        "earth shattering",
+        "heart stopping",
+        "breath taking",
+        "spine tingling",
+        "hair raising",
+        "blood boiling",
+        "teeth grinding",
+        "fist clenching",
+        "jaw dropping",
+        "eye opening"
+      ],
+      "risk_level": "low",
+      "action": "allow"
+    },
+    "expressions": {
+      "patterns": [
+        "I hate when",
+        "I hate that",
+        "I hate this",
+        "I hate it",
+        "I hate you",
+        "you're annoying",
+        "you're frustrating",
+        "you're irritating",
+        "you're maddening",
+        "you're infuriating",
+        "you're exasperating",
+        "you're aggravating",
+        "you're vexing",
+        "you're provoking",
+        "you're provoking me"
+      ],
+      "risk_level": "low",
+      "action": "allow"
+    }
+  },
+  "boundary_templates": {
+    "high_risk": {
+      "message": "We're concerned about your wellbeing. This message contains content that suggests you might be in distress. Please reach out to someone you trust or contact a mental health professional.",
+      "resources": [
+        "National Suicide Prevention Lifeline: 988",
+        "Crisis Text Line: Text HOME to 741741",
+        "Emergency Services: 911"
+      ],
+      "action": "block"
+    },
+    "medium_risk": {
+      "message": "We've noticed this message might be challenging for your relationship. Consider taking a break and returning to this conversation when you both feel calmer.",
+      "resources": [
+        "Relationship Counseling Resources",
+        "Communication Skills Tips",
+        "Conflict Resolution Guide"
+      ],
+      "action": "warn"
+    },
+    "boundary_hit": {
+      "message": "This conversation has reached a point where we recommend taking a break. Here are some resources to help you both.",
+      "resources": [
+        "Couples Therapy Resources",
+        "Relationship Support Groups",
+        "Communication Workshops"
+      ],
+      "action": "boundary"
+    }
+  }
+}

@@ -58,6 +58,7 @@ export default function DemoPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [safetyViolations, setSafetyViolations] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [demoStats, setDemoStats] = useState<{sessions: number; users: number; couples: number} | null>(null);
   
   // Accessibility features
   const [isMuted, setIsMuted] = useState(false);
@@ -117,6 +118,25 @@ export default function DemoPage() {
       setSkipToContent(false);
     }
   }, [skipToContent]);
+
+  // Load demo stats
+  useEffect(() => {
+    const loadDemoStats = async () => {
+      try {
+        const response = await fetch('/demo/api?action=stats');
+        if (response.ok) {
+          const stats = await response.json();
+          setDemoStats(stats);
+        }
+      } catch (error) {
+        console.error('Failed to load demo stats:', error);
+      }
+    };
+    
+    loadDemoStats();
+    const interval = setInterval(loadDemoStats, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Announce step changes to screen readers
   useEffect(() => {
@@ -621,6 +641,22 @@ export default function DemoPage() {
       role="application"
       aria-label="Sync Demo Application"
     >
+      {/* Demo Banner */}
+      <div className="bg-amber-500 text-white text-center py-2 px-4 sticky top-0 z-50">
+        <div className="flex items-center justify-center space-x-2">
+          <span className="font-semibold">🚧 DEMO ENVIRONMENT</span>
+          <span>•</span>
+          <span>Data auto-deletes when you end • Not stored permanently</span>
+          {demoStats && (
+            <>
+              <span>•</span>
+              <span className="text-sm">
+                {demoStats.sessions} sessions, {demoStats.users} users, {demoStats.couples} couples
+              </span>
+            </>
+          )}
+        </div>
+      </div>
       {/* Screen Reader Announcements */}
       <div 
         ref={announcementRef}

@@ -1,77 +1,69 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { getKMSClient } from '../crypto/kms';
+import { getEncryption } from '../crypto/aes-gcm';
 
 interface CryptoHealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
-  kmsConnection: boolean;
-  dekKeyStatus: 'active' | 'inactive' | 'error';
-  testVectorDecrypt: boolean;
+  kms: 'ok' | 'error';
+  dek_age_days: number;
+  selftest: 'ok' | 'failed';
   encryptionMethod: string;
   lastChecked: string;
   errors?: string[];
 }
 
-// Simple encryption for testing (replace with real KMS in production)
-function encrypt(text: string): string {
-  if (!text) return '';
-  return Buffer.from(text).toString('base64');
-}
-
-function decrypt(encrypted: string): string {
-  if (!encrypted) return '';
-  return Buffer.from(encrypted, 'base64').toString('utf8');
-}
-
-// Test vector for encryption/decryption validation
-const TEST_VECTOR = 'Sync crypto health test vector - 2024';
-
 export async function getCryptoHealth(): Promise<CryptoHealthStatus> {
   const errors: string[] = [];
-  let kmsConnection = false;
-  let dekKeyStatus: 'active' | 'inactive' | 'error' = 'inactive';
-  let testVectorDecrypt = false;
+  let kmsStatus: 'ok' | 'error' = 'error';
+  let dekAgeDays = -1;
+  let selfTestStatus: 'ok' | 'failed' = 'failed';
 
   try {
-    // Simulate KMS connection check
-    // In production, this would check actual KMS connectivity
-    kmsConnection = true;
+    // Check KMS connection
+    const kms = getKMSClient();
+    const kmsConnectionStatus = await kms.checkConnection();
     
-    // Check if encryption key is available
-    const encryptionKey = process.env.ENCRYPTION_KEY || 'test-key';
-    if (encryptionKey && encryptionKey !== 'test-key') {
-      dekKeyStatus = 'active';
+    if (kmsConnectionStatus.connected && kmsConnectionStatus.keyStatus === 'active') {
+      kmsStatus = 'ok';
     } else {
-      dekKeyStatus = 'inactive';
-      errors.push('Using test encryption key - not suitable for production');
+      kmsStatus = 'error';
+      errors.push(`KMS connection failed: ${kmsConnectionStatus.error || 'Unknown error'}`);
     }
 
-    // Test encryption/decryption with test vector
-    try {
-      const encrypted = encrypt(TEST_VECTOR);
-      const decrypted = decrypt(encrypted);
-      testVectorDecrypt = decrypted === TEST_VECTOR;
-      
-      if (!testVectorDecrypt) {
-        errors.push('Test vector decryption failed');
-      }
-    } catch (e) {
-      errors.push(`Encryption/decryption test failed: ${e}`);
+    // Get DEK age
+    const encryption = getEncryption();
+    dekAgeDays = encryption.getDEKAge();
+    
+    if (dekAgeDays < 0) {
+      errors.push('DEK not derived');
+    } else if (dekAgeDays > 30) {
+      errors.push(`DEK is ${dekAgeDays} days old - consider rotation`);
+    }
+
+    // Run self-test
+    const selfTestPassed = await encryption.selfTest();
+    if (selfTestPassed) {
+      selfTestStatus = 'ok';
+    } else {
+      selfTestStatus = 'failed';
+      errors.push('Encryption self-test failed');
     }
 
     // Determine overall status
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
     
-    if (!kmsConnection || !testVectorDecrypt) {
+    if (kmsStatus === 'error' || selfTestStatus === 'failed') {
       status = 'unhealthy';
-    } else if (dekKeyStatus === 'inactive' || errors.length > 0) {
+    } else if (dekAgeDays > 7 || errors.length > 0) {
       status = 'degraded';
     }
 
     return {
       status,
-      kmsConnection,
-      dekKeyStatus,
-      testVectorDecrypt,
-      encryptionMethod: 'AES-256-GCM (simplified for testing)',
+      kms: kmsStatus,
+      dek_age_days: dekAgeDays,
+      selftest: selfTestStatus,
+      encryptionMethod: 'AES-256-GCM',
       lastChecked: new Date().toISOString(),
       errors: errors.length > 0 ? errors : undefined,
     };
@@ -79,12 +71,12 @@ export async function getCryptoHealth(): Promise<CryptoHealthStatus> {
   } catch (error) {
     return {
       status: 'unhealthy',
-      kmsConnection: false,
-      dekKeyStatus: 'error',
-      testVectorDecrypt: false,
+      kms: 'error',
+      dek_age_days: -1,
+      selftest: 'failed',
       encryptionMethod: 'Unknown',
       lastChecked: new Date().toISOString(),
-      errors: [`Crypto health check failed: ${error}`],
+      errors: [`Crypto health check failed: ${error.message}`],
     };
   }
 }
