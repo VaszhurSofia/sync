@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -24,7 +24,11 @@ import {
   User,
   UserCheck,
   Clock,
-  Lightbulb
+  Lightbulb,
+  Volume2,
+  VolumeX,
+  SkipForward,
+  SkipBack
 } from 'lucide-react';
 
 interface Message {
@@ -55,10 +59,81 @@ export default function DemoPage() {
   const [safetyViolations, setSafetyViolations] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
+  // Accessibility features
+  const [isMuted, setIsMuted] = useState(false);
+  const [announcements, setAnnouncements] = useState<string[]>([]);
+  const [skipToContent, setSkipToContent] = useState(false);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+  const announcementRef = useRef<HTMLDivElement>(null);
+  
   // New structured communication state
   const [communicationPhase, setCommunicationPhase] = useState<'waiting' | 'userA' | 'userB' | 'aiReview'>('waiting');
   const [userAResponse, setUserAResponse] = useState('');
   const [userBResponse, setUserBResponse] = useState('');
+
+  // Accessibility helper functions
+  const announceToScreenReader = (message: string) => {
+    if (!isMuted) {
+      setAnnouncements(prev => [...prev, message]);
+      // Clear announcement after 5 seconds
+      setTimeout(() => {
+        setAnnouncements(prev => prev.slice(1));
+      }, 5000);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Skip to content functionality
+    if (event.key === 'Tab' && event.shiftKey && event.target === document.body) {
+      setSkipToContent(true);
+    }
+    
+    // Keyboard shortcuts
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key) {
+        case '1':
+          event.preventDefault();
+          setAccentColor('blue');
+          announceToScreenReader('Switched to blue theme');
+          break;
+        case '2':
+          event.preventDefault();
+          setAccentColor('green');
+          announceToScreenReader('Switched to green theme');
+          break;
+        case 'm':
+          event.preventDefault();
+          setIsMuted(!isMuted);
+          announceToScreenReader(isMuted ? 'Screen reader announcements enabled' : 'Screen reader announcements muted');
+          break;
+      }
+    }
+  };
+
+  // Focus management
+  useEffect(() => {
+    if (skipToContent && mainContentRef.current) {
+      mainContentRef.current.focus();
+      setSkipToContent(false);
+    }
+  }, [skipToContent]);
+
+  // Announce step changes to screen readers
+  useEffect(() => {
+    const stepNames = [
+      'Welcome to Sync demo',
+      'Authentication step',
+      'Couple setup step', 
+      'Session start step',
+      'Structured communication step',
+      'Safety features step',
+      'Survey and analytics step',
+      'Privacy and delete step'
+    ];
+    if (currentStep < stepNames.length) {
+      announceToScreenReader(`Step ${currentStep + 1}: ${stepNames[currentStep]}`);
+    }
+  }, [currentStep]);
   const [currentTurn, setCurrentTurn] = useState<'userA' | 'userB'>('userA');
 
   const steps = [
@@ -540,32 +615,95 @@ export default function DemoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50"
+      onKeyDown={handleKeyDown}
+      role="application"
+      aria-label="Sync Demo Application"
+    >
+      {/* Screen Reader Announcements */}
+      <div 
+        ref={announcementRef}
+        className="sr-only" 
+        aria-live="polite" 
+        aria-atomic="true"
+        role="status"
+      >
+        {announcements.map((announcement, index) => (
+          <div key={index}>{announcement}</div>
+        ))}
+      </div>
+
+      {/* Skip to Content Link */}
+      <a 
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50"
+        onClick={(e) => {
+          e.preventDefault();
+          mainContentRef.current?.focus();
+        }}
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-neutral-200 sticky top-0 z-50">
+      <header 
+        className="bg-white/80 backdrop-blur-md border-b border-neutral-200 sticky top-0 z-50"
+        role="banner"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Heart className={`h-8 w-8 ${accentColor === 'blue' ? 'text-blue-primary' : 'text-green-primary'}`} />
+              <Heart 
+                className={`h-8 w-8 ${accentColor === 'blue' ? 'text-blue-primary' : 'text-green-primary'}`} 
+                aria-hidden="true"
+              />
               <span className="text-xl font-bold text-neutral-900">Sync Demo</span>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4" role="group" aria-label="Theme selection and navigation">
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setAccentColor('blue')}
+                  onClick={() => {
+                    setAccentColor('blue');
+                    announceToScreenReader('Switched to blue theme');
+                  }}
                   className={`w-6 h-6 rounded-full border-2 ${
                     accentColor === 'blue' ? 'border-blue-primary bg-blue-primary' : 'border-blue-300'
                   }`}
+                  aria-label="Set accent color to blue"
+                  aria-pressed={accentColor === 'blue'}
+                  title="Switch to blue theme (Ctrl+1)"
                 />
                 <button
-                  onClick={() => setAccentColor('green')}
+                  onClick={() => {
+                    setAccentColor('green');
+                    announceToScreenReader('Switched to green theme');
+                  }}
                   className={`w-6 h-6 rounded-full border-2 ${
                     accentColor === 'green' ? 'border-green-primary bg-green-primary' : 'border-green-300'
                   }`}
+                  aria-label="Set accent color to green"
+                  aria-pressed={accentColor === 'green'}
+                  title="Switch to green theme (Ctrl+2)"
                 />
               </div>
-              <Link href="/" className="text-neutral-600 hover:text-neutral-900 transition-colors">
+              <button
+                className={`p-2 rounded-md ${isMuted ? 'bg-neutral-200 text-neutral-600' : 'bg-blue-100 text-blue-600'}`}
+                onClick={() => {
+                  setIsMuted(!isMuted);
+                  announceToScreenReader(isMuted ? 'Screen reader announcements enabled' : 'Screen reader announcements muted');
+                }}
+                aria-label={isMuted ? 'Enable screen reader announcements' : 'Mute screen reader announcements'}
+                title={`${isMuted ? 'Enable' : 'Mute'} screen reader announcements (Ctrl+M)`}
+              >
+                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+              <Link 
+                href="/" 
+                className="text-neutral-600 hover:text-neutral-900 transition-colors"
+                aria-label="Return to Sync homepage"
+              >
                 Back to Home
               </Link>
             </div>
@@ -574,30 +712,37 @@ export default function DemoPage() {
       </header>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b border-neutral-200">
+      <div className="bg-white border-b border-neutral-200" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label="Demo progress">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4" role="list" aria-label="Demo steps">
               {steps.map((step, index) => (
-                <div key={index} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    index <= currentStep 
-                      ? `${accentColor === 'blue' ? 'bg-blue-primary text-white' : 'bg-green-primary text-white'}`
-                      : 'bg-neutral-200 text-neutral-600'
-                  }`}>
+                <div key={index} className="flex items-center" role="listitem">
+                  <div 
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      index <= currentStep 
+                        ? `${accentColor === 'blue' ? 'bg-blue-primary text-white' : 'bg-green-primary text-white'}`
+                        : 'bg-neutral-200 text-neutral-600'
+                    }`}
+                    aria-label={`Step ${index + 1}: ${step.title} - ${step.description}`}
+                    aria-current={index === currentStep ? 'step' : undefined}
+                  >
                     {index + 1}
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`w-12 h-1 mx-2 ${
-                      index < currentStep 
-                        ? `${accentColor === 'blue' ? 'bg-blue-primary' : 'bg-green-primary'}`
-                        : 'bg-neutral-200'
-                    }`} />
+                    <div 
+                      className={`w-12 h-1 mx-2 ${
+                        index < currentStep 
+                          ? `${accentColor === 'blue' ? 'bg-blue-primary' : 'bg-green-primary'}`
+                          : 'bg-neutral-200'
+                      }`} 
+                      aria-hidden="true"
+                    />
                   )}
                 </div>
               ))}
             </div>
-            <div className="text-sm text-neutral-600">
+            <div className="text-sm text-neutral-600" aria-live="polite">
               Step {currentStep + 1} of {steps.length}
             </div>
           </div>
@@ -605,7 +750,14 @@ export default function DemoPage() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main 
+        id="main-content"
+        ref={mainContentRef}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+        role="main"
+        aria-label="Demo content"
+        tabIndex={-1}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -613,6 +765,8 @@ export default function DemoPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            role="region"
+            aria-label={`Step ${currentStep + 1}: ${steps[currentStep]?.title}`}
           >
             {getStepContent()}
           </motion.div>
@@ -622,31 +776,46 @@ export default function DemoPage() {
       {/* Delete Modal */}
       <AnimatePresence>
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            aria-describedby="delete-modal-description"
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className="bg-white rounded-lg p-6 max-w-md mx-4"
+              role="document"
             >
               <div className="flex items-center mb-4">
-                <Trash2 className="h-6 w-6 text-neutral-600 mr-2" />
-                <h3 className="text-lg font-semibold">Delete Account</h3>
+                <Trash2 className="h-6 w-6 text-neutral-600 mr-2" aria-hidden="true" />
+                <h3 id="delete-modal-title" className="text-lg font-semibold">Delete Account</h3>
               </div>
-              <p className="text-neutral-600 mb-6">
+              <p id="delete-modal-description" className="text-neutral-600 mb-6">
                 This will permanently delete all your data. This action cannot be undone.
               </p>
-              <div className="flex space-x-4">
+              <div className="flex space-x-4" role="group" aria-label="Delete confirmation actions">
                 <button 
-                  onClick={() => setShowDeleteModal(false)}
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    announceToScreenReader('Delete cancelled');
+                  }}
                   className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-all"
+                  aria-label="Cancel account deletion"
                 >
                   Cancel
                 </button>
                 <button 
-                  onClick={handleDeleteAccount}
+                  onClick={() => {
+                    handleDeleteAccount();
+                    announceToScreenReader('Account deletion initiated');
+                  }}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-all"
+                  className="flex-1 px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-all disabled:opacity-50"
+                  aria-label="Confirm account deletion"
                 >
                   {isLoading ? <RefreshCw className="h-4 w-4 animate-spin mx-auto" /> : 'Delete'}
                 </button>
