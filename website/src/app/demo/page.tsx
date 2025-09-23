@@ -699,6 +699,43 @@ export default function DemoPage() {
               >
                 {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
+              
+              {/* Accent Color Toggle - Enhanced */}
+              <div className="flex items-center space-x-2 bg-neutral-100 rounded-lg p-1">
+                <span className="text-xs text-neutral-600 px-2">Theme:</span>
+                <button
+                  onClick={() => {
+                    setAccentColor('blue');
+                    announceToScreenReader('Switched to blue theme');
+                  }}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                    accentColor === 'blue' 
+                      ? 'bg-blue-500 text-white shadow-sm' 
+                      : 'text-blue-600 hover:bg-blue-50'
+                  }`}
+                  aria-label="Switch to blue theme"
+                  aria-pressed={accentColor === 'blue'}
+                  title="Blue theme (Ctrl+1)"
+                >
+                  Blue
+                </button>
+                <button
+                  onClick={() => {
+                    setAccentColor('green');
+                    announceToScreenReader('Switched to green theme');
+                  }}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                    accentColor === 'green' 
+                      ? 'bg-green-500 text-white shadow-sm' 
+                      : 'text-green-600 hover:bg-green-50'
+                  }`}
+                  aria-label="Switch to green theme"
+                  aria-pressed={accentColor === 'green'}
+                  title="Green theme (Ctrl+2)"
+                >
+                  Green
+                </button>
+              </div>
               <Link 
                 href="/" 
                 className="text-neutral-600 hover:text-neutral-900 transition-colors"
