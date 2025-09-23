@@ -1,0 +1,3 @@
+-- This migration is handled by the migrate.ts script
+-- The migrations table is created there to avoid circular dependency
+-- This file exists for completeness in the migration sequence

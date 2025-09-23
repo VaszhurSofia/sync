@@ -1,0 +1,32 @@
+{
+  "name": "sync-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "app-mobile",
+    "site",
+    "services/api",
+    "services/ai",
+    "packages/ui",
+    "packages/types"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "db:migrate": "cd services/api && npm run db:migrate",
+    "db:seed": "cd services/api && npm run db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.12",
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

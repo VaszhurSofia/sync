@@ -1,0 +1,482 @@
+openapi: 3.0.0
+info:
+  title: Sync API
+  description: Couple's shared chat MVP with AI reflection and clarification
+  version: 0.1.0
+  contact:
+    name: Sync Team
+    email: support@sync.app
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api-staging.sync.app
+    description: Staging server
+  - url: https://api.sync.app
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /auth/request-code:
+    post:
+      tags:
+        - Authentication
+      summary: Request verification code
+      description: Send a verification code to the user's email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequestCode'
+      responses:
+        '204':
+          description: Verification code sent successfully
+        '400':
+          description: Invalid email format
+        '429':
+          description: Rate limit exceeded
+
+  /auth/verify-code:
+    post:
+      tags:
+        - Authentication
+      summary: Verify code and get access token
+      description: Verify the code and receive an access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthVerifyCode'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid code or email
+        '401':
+          description: Invalid or expired code
+
+  /couples:
+    post:
+      tags:
+        - Couples
+      summary: Create a new couple
+      description: Create a new couple relationship
+      responses:
+        '201':
+          description: Couple created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCoupleResponse'
+        '401':
+          description: Unauthorized
+
+  /invites:
+    post:
+      tags:
+        - Invites
+      summary: Create an invite
+      description: Create an invite for the partner to join the couple
+      responses:
+        '201':
+          description: Invite created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInviteResponse'
+        '401':
+          description: Unauthorized
+
+  /invites/{code}/accept:
+    post:
+      tags:
+        - Invites
+      summary: Accept an invite
+      description: Accept an invite to join a couple
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Invite accepted successfully
+        '400':
+          description: Invalid or expired invite code
+        '404':
+          description: Invite not found
+
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new session
+      description: Start a new chat session
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+        '401':
+          description: Unauthorized
+
+  /sessions/{id}/messages:
+    post:
+      tags:
+        - Messages
+      summary: Send a message
+      description: Send a message in a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessage'
+      responses:
+        '202':
+          description: Message accepted for processing
+        '400':
+          description: Invalid message content
+        '401':
+          description: Unauthorized
+        '409':
+          description: Session has reached boundary, no more messages allowed
+
+    get:
+      tags:
+        - Messages
+      summary: Get messages
+      description: Get messages from a session with long-polling support
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: after
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Get messages after this timestamp
+        - name: waitMs
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 25000
+            default: 0
+          description: Long-polling wait time in milliseconds
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMessagesResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+
+  /sessions/{id}/end:
+    post:
+      tags:
+        - Sessions
+      summary: End a session
+      description: End the current chat session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session ended successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+
+  /sessions/{id}/feedback:
+    post:
+      tags:
+        - Feedback
+      summary: Submit session feedback
+      description: Submit feedback for a completed session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFeedback'
+      responses:
+        '204':
+          description: Feedback submitted successfully
+        '400':
+          description: Invalid feedback data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+
+  /sessions/{id}:
+    delete:
+      tags:
+        - Sessions
+      summary: Delete a session
+      description: Permanently delete a session and all its data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+
+  /boundary/resources:
+    get:
+      tags:
+        - Boundary
+      summary: Get boundary resources
+      description: Get EU-only resources for boundary detection
+      security: []
+      responses:
+        '200':
+          description: Boundary resources retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundaryResources'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthRequestCode:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+
+    AuthVerifyCode:
+      type: object
+      required:
+        - email
+        - code
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          example: "123456"
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    CreateCoupleResponse:
+      type: object
+      required:
+        - coupleId
+      properties:
+        coupleId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    CreateInviteResponse:
+      type: object
+      required:
+        - code
+        - link
+      properties:
+        code:
+          type: string
+          example: "ABC123"
+        link:
+          type: string
+          format: uri
+          example: "https://sync.app/join/ABC123"
+
+    CreateSessionResponse:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    CreateMessage:
+      type: object
+      required:
+        - content
+        - client_message_id
+      properties:
+        content:
+          type: string
+          maxLength: 4000
+          example: "I feel like we need to talk about our communication"
+        client_message_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    Message:
+      type: object
+      required:
+        - id
+        - session_id
+        - sender
+        - content_enc
+        - created_at
+        - safety_tags
+        - client_message_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        sender:
+          type: string
+          enum: [userA, userB, ai]
+        content_enc:
+          type: string
+          description: Encrypted message content
+        created_at:
+          type: string
+          format: date-time
+        safety_tags:
+          type: array
+          items:
+            type: string
+        client_message_id:
+          type: string
+          format: uuid
+
+    GetMessagesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Message'
+
+    CreateFeedback:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: string
+          enum: [angry, neutral, happy]
+          example: "happy"
+
+    BoundaryResources:
+      type: object
+      required:
+        - region
+        - resources
+      properties:
+        region:
+          type: string
+          enum: [EU]
+          example: "EU"
+        resources:
+          type: array
+          items:
+            type: string
+          example: ["crisis-helpline-eu", "couples-therapy-eu"]
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Invalid request data"
+        code:
+          type: string
+          example: "INVALID_EMAIL_FORMAT"
