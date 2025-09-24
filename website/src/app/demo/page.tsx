@@ -30,6 +30,7 @@ import {
   SkipForward,
   SkipBack
 } from 'lucide-react';
+import DemoBanner from '../../components/DemoBanner';
 
 interface Message {
   id: string;
@@ -154,6 +155,31 @@ export default function DemoPage() {
       announceToScreenReader(`Step ${currentStep + 1}: ${stepNames[currentStep]}`);
     }
   }, [currentStep]);
+
+  // Auto-clear demo data when user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear demo data when user leaves
+      fetch('/demo/api?action=clear_all', { method: 'POST' })
+        .catch(error => console.error('Failed to clear demo data:', error));
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Clear demo data when tab becomes hidden
+        fetch('/demo/api?action=clear_all', { method: 'POST' })
+          .catch(error => console.error('Failed to clear demo data:', error));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   const [currentTurn, setCurrentTurn] = useState<'userA' | 'userB'>('userA');
 
   const steps = [
@@ -673,21 +699,7 @@ export default function DemoPage() {
       aria-label="Sync Demo Application"
     >
       {/* Demo Banner */}
-      <div className="bg-amber-500 text-white text-center py-2 px-4 sticky top-0 z-50">
-        <div className="flex items-center justify-center space-x-2">
-          <span className="font-semibold">🚧 DEMO ENVIRONMENT</span>
-          <span>•</span>
-          <span>Data auto-deletes when you end • Not stored permanently</span>
-          {demoStats && (
-            <>
-              <span>•</span>
-              <span className="text-sm">
-                {demoStats.sessions} sessions, {demoStats.users} users, {demoStats.couples} couples
-              </span>
-            </>
-          )}
-        </div>
-      </div>
+      <DemoBanner />
       {/* Screen Reader Announcements */}
       <div 
         ref={announcementRef}

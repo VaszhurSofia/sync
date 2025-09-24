@@ -18,7 +18,10 @@
     "type-check": "turbo run type-check",
     "clean": "turbo run clean",
     "db:migrate": "cd services/api && npm run db:migrate",
-    "db:seed": "cd services/api && npm run db:seed"
+    "db:seed": "cd services/api && npm run db:seed",
+    "generate-client": "ts-node scripts/generate-api-client.ts generate",
+    "check-drift": "ts-node scripts/generate-api-client.ts check-drift",
+    "test:log-scan": "ts-node __tests__/security/log-scan.test.ts"
   },
   "devDependencies": {
     "turbo": "^1.10.12",

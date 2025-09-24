@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import StagingRibbon from '../components/StagingRibbon';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   keywords: ['couple communication', 'AI relationship', 'privacy', 'safety', 'relationship therapy'],
   authors: [{ name: 'Sync Team' }],
   viewport: 'width=device-width, initial-scale=1',
-  robots: 'index, follow',
+  robots: process.env.STAGING === 'true' ? 'noindex,nofollow' : 'index, follow',
   openGraph: {
     title: 'Sync - AI-Powered Couple Communication',
     description: 'Transform your relationship with AI-powered reflection, clarification, and micro-actions.',
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <StagingRibbon />
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
           {children}
         </div>

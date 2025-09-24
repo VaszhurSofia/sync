@@ -1,0 +1,157 @@
+name: PR Template Compliance
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  pr-template-compliance:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Check PR template compliance
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const body = pr.body || '';
+            const issues = [];
+            
+            // Check for required sections
+            const requiredSections = [
+              '## 🧪 Testing',
+              '## 📚 Documentation', 
+              '## 🔒 Security & Privacy Checklist',
+              '## 🔄 Rollback Plan',
+              '## ✅ Pre-merge Checklist'
+            ];
+            
+            requiredSections.forEach(section => {
+              if (!body.includes(section)) {
+                issues.push(`Missing required section: ${section}`);
+              }
+            });
+            
+            // Check for security checklist items
+            const securityItems = [
+              'No sensitive data (PII, tokens, secrets) in code',
+              'No hardcoded credentials or API keys',
+              'No plaintext logging of sensitive data',
+              'Authentication checks implemented',
+              'Authorization properly enforced'
+            ];
+            
+            securityItems.forEach(item => {
+              if (!body.includes(item)) {
+                issues.push(`Missing security checklist item: ${item}`);
+              }
+            });
+            
+            // Check for testing checkboxes
+            const testingItems = [
+              'Unit tests added/updated',
+              'Integration tests added/updated',
+              'Manual testing completed',
+              'All existing tests pass'
+            ];
+            
+            testingItems.forEach(item => {
+              if (!body.includes(item)) {
+                issues.push(`Missing testing checklist item: ${item}`);
+              }
+            });
+            
+            // Check for demo links (optional but recommended)
+            if (!body.includes('**Staging**:') && !body.includes('**Demo**:')) {
+              issues.push('Consider adding demo/staging links for testing');
+            }
+            
+            // Create comment with results
+            if (issues.length > 0) {
+              const comment = `## 🚨 PR Template Compliance Issues\n\n` +
+                `The following items are missing or incomplete:\n\n` +
+                issues.map(issue => `- ${issue}`).join('\n') + '\n\n' +
+                `Please update your PR description to include all required sections and checklist items.\n\n` +
+                `**Template**: [.github/pull_request_template.md](.github/pull_request_template.md)`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+              
+              // Set check status to failure
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'PR Template Compliance',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: 'failure',
+                output: {
+                  title: 'PR Template Compliance Failed',
+                  summary: `Found ${issues.length} compliance issues`,
+                  text: issues.join('\n')
+                }
+              });
+            } else {
+              // Set check status to success
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'PR Template Compliance',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                  title: 'PR Template Compliance Passed',
+                  summary: 'All required sections and checklist items are present'
+                }
+              });
+            }
+            
+      - name: Check for security-sensitive files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const securitySensitiveFiles = files.filter(file => 
+              file.filename.includes('auth') ||
+              file.filename.includes('crypto') ||
+              file.filename.includes('security') ||
+              file.filename.includes('middleware') ||
+              file.filename.includes('logger') ||
+              file.filename.includes('database') ||
+              file.filename.includes('migration')
+            );
+            
+            if (securitySensitiveFiles.length > 0) {
+              const comment = `## 🔒 Security-Sensitive Files Detected\n\n` +
+                `The following files have been modified that may contain security-sensitive code:\n\n` +
+                securitySensitiveFiles.map(file => `- \`${file.filename}\``).join('\n') + '\n\n' +
+                `**Please ensure the Security & Privacy Checklist is thoroughly completed.**\n\n` +
+                `Consider requesting a security review from the team.`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }

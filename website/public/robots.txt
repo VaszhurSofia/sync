@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# Staging environment - no indexing allowed

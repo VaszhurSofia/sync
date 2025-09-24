@@ -1,0 +1,71 @@
+name: OpenAPI Client Drift Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/openapi.yaml'
+      - 'packages/types/**'
+      - 'scripts/generate-api-client.ts'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/openapi.yaml'
+      - 'packages/types/**'
+      - 'scripts/generate-api-client.ts'
+
+jobs:
+  openapi-drift-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @openapitools/openapi-generator-cli
+          
+      - name: Generate API client
+        run: |
+          npm run generate-client
+          
+      - name: Check for drift
+        run: |
+          npm run check-drift
+          
+      - name: Build types package
+        run: |
+          cd packages/types
+          npm run build
+          
+      - name: Verify generated files
+        run: |
+          if [ ! -f "packages/types/src/api-client.ts" ]; then
+            echo "❌ Generated API client not found"
+            exit 1
+          fi
+          
+          if [ ! -f "packages/types/src/api-types.ts" ]; then
+            echo "❌ Generated API types not found"
+            exit 1
+          fi
+          
+          echo "✅ Generated files verified"
+          
+      - name: Check file changes
+        run: |
+          if [ -n "$(git status --porcelain packages/types/)" ]; then
+            echo "❌ Generated client is out of sync with OpenAPI spec"
+            echo "Run 'npm run generate-client' to update"
+            git status --porcelain packages/types/
+            exit 1
+          else
+            echo "✅ Generated client is in sync"
+          fi
