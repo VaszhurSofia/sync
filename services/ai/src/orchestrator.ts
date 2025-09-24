@@ -2,6 +2,9 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { logger } from './logger';
 import { TherapistPromptResponseSchema, validateTherapistResponse, parseTherapistResponse } from './schemas/therapist-response';
+import { validateTherapistV12, TherapistV12 } from './validation/therapistValidator';
+import { createSafeFallbackTemplate, createBoundaryTemplate, SafeFallbackContext } from './fallbacks/safeFallback';
+import { telemetryCollector } from './telemetry';
 
 export interface OrchestratorConfig {
   therapistPromptVersion: string;
@@ -29,6 +32,7 @@ export interface ConversationContext {
 export interface OrchestratorResponse {
   success: boolean;
   response?: string;
+  jsonResponse?: TherapistV12;
   error?: string;
   promptVersion: string;
   validationResult?: {
@@ -38,6 +42,8 @@ export interface OrchestratorResponse {
   };
   retryCount: number;
   latency: number;
+  usedFallback?: boolean;
+  usedBoundary?: boolean;
 }
 
 export class TherapistOrchestrator {
@@ -77,7 +83,7 @@ export class TherapistOrchestrator {
   }
 
   /**
-   * Generate therapist response
+   * Generate therapist response with v1.2 JSON validation
    */
   async generateResponse(context: ConversationContext): Promise<OrchestratorResponse> {
     const startTime = Date.now();
@@ -87,19 +93,46 @@ export class TherapistOrchestrator {
       // Load the appropriate prompt version
       const systemPrompt = this.loadTherapistPrompt(this.config.therapistPromptVersion);
       
-      // Check for safety boundary
-      if (context.safetyContext?.hasBoundary && context.safetyContext.boundaryTemplate) {
+      // Check for safety boundary - return boundary template immediately
+      if (context.safetyContext?.hasBoundary) {
+        const boundaryTemplate = createBoundaryTemplate();
+        const boundaryLatency = Date.now() - startTime;
+        
+        // Record telemetry for boundary usage
+        telemetryCollector.recordEvent({
+          sessionId: context.sessionId,
+          userId: 'unknown', // Would be provided in real implementation
+          promptVersion: this.config.therapistPromptVersion,
+          validatorPassed: true,
+          totalSentences: boundaryTemplate.meta.total_sentences,
+          latency: boundaryLatency,
+          retryCount: 0,
+          usedFallback: false,
+          usedBoundary: true,
+          modelUsed: this.config.model,
+          temperature: 0.7,
+          maxTokens: 800
+        });
+        
+        logger.info('Using boundary template due to safety concerns', {
+          sessionId: context.sessionId,
+          hasBoundary: context.safetyContext.hasBoundary,
+          latency: boundaryLatency
+        });
+        
         return {
           success: true,
-          response: context.safetyContext.boundaryTemplate,
+          jsonResponse: boundaryTemplate,
+          response: this.formatResponseForDisplay(boundaryTemplate),
           promptVersion: this.config.therapistPromptVersion,
           validationResult: {
             isValid: true,
             errors: [],
-            warnings: []
+            warnings: ['Used boundary template due to safety concerns']
           },
           retryCount: 0,
-          latency: Date.now() - startTime
+          latency: boundaryLatency,
+          usedBoundary: true
         };
       }
       
@@ -107,44 +140,61 @@ export class TherapistOrchestrator {
       const conversationHistory = this.buildConversationHistory(context);
       
       // Generate response with retries
-      let response: string;
+      let jsonResponse: TherapistV12;
       let validationResult;
       let lastError: Error | null = null;
       
       while (retryCount <= this.config.maxRetries) {
         try {
-          response = await this.callOpenAI(systemPrompt, conversationHistory);
+          const rawResponse = await this.callOpenAIForJson(systemPrompt, conversationHistory);
           
-          // Validate response
-          validationResult = parseTherapistResponse(response);
+          // Validate JSON response
+          const validation = validateTherapistV12(rawResponse);
           
-          if (validationResult.isValid) {
-            logger.info('Response generated successfully', {
+          if (validation.ok) {
+            jsonResponse = validation.value;
+            validationResult = {
+              isValid: true,
+              errors: [],
+              warnings: []
+            };
+            
+            logger.info('Response generated and validated successfully', {
               sessionId: context.sessionId,
               retryCount,
-              responseLength: response.length
+              totalSentences: jsonResponse.meta.total_sentences,
+              version: jsonResponse.meta.version
             });
             break;
           } else {
             logger.warn('Response validation failed', {
-              errors: validationResult.errors,
-              warnings: validationResult.warnings,
+              errors: validation.errors,
               retryCount,
-              responseLength: response.length
+              sessionId: context.sessionId
             });
             
             if (retryCount === this.config.maxRetries) {
-              // Use fallback template
-              response = this.config.fallbackTemplate;
+              // Use safe fallback template
+              const fallbackContext: SafeFallbackContext = {
+                sessionId: context.sessionId,
+                userId: 'unknown', // Would be provided in real implementation
+                partnerId: 'unknown',
+                messageCount: context.previousMessages?.length || 0,
+                hasBoundaryFlag: context.safetyContext?.hasBoundary || false,
+                lastMessageContent: context.userBMessage
+              };
+              
+              jsonResponse = createSafeFallbackTemplate(fallbackContext);
               validationResult = {
                 isValid: true,
                 errors: [],
-                warnings: ['Used fallback template due to validation failures']
+                warnings: ['Used safe fallback template due to validation failures']
               };
-              logger.warn('Using fallback template', {
+              
+              logger.warn('Using safe fallback template', {
                 sessionId: context.sessionId,
                 retryCount,
-                originalErrors: validationResult.errors
+                originalErrors: validation.errors
               });
               break;
             }
@@ -158,14 +208,24 @@ export class TherapistOrchestrator {
           });
           
           if (retryCount === this.config.maxRetries) {
-            // Use fallback template on final failure
-            response = this.config.fallbackTemplate;
+            // Use safe fallback template on final failure
+            const fallbackContext: SafeFallbackContext = {
+              sessionId: context.sessionId,
+              userId: 'unknown',
+              partnerId: 'unknown',
+              messageCount: context.previousMessages?.length || 0,
+              hasBoundaryFlag: context.safetyContext?.hasBoundary || false,
+              lastMessageContent: context.userBMessage
+            };
+            
+            jsonResponse = createSafeFallbackTemplate(fallbackContext);
             validationResult = {
               isValid: true,
               errors: [],
-              warnings: ['Used fallback template due to API failures']
+              warnings: ['Used safe fallback template due to API failures']
             };
-            logger.warn('Using fallback template due to API failure', {
+            
+            logger.warn('Using safe fallback template due to API failure', {
               sessionId: context.sessionId,
               retryCount,
               lastError: lastError.message
@@ -177,21 +237,45 @@ export class TherapistOrchestrator {
         retryCount++;
       }
       
+      const finalLatency = Date.now() - startTime;
+      const usedFallback = validationResult?.warnings?.some(w => w.includes('fallback')) || false;
+      
+      // Record telemetry
+      telemetryCollector.recordEvent({
+        sessionId: context.sessionId,
+        userId: 'unknown', // Would be provided in real implementation
+        promptVersion: this.config.therapistPromptVersion,
+        validatorPassed: validationResult?.isValid || false,
+        totalSentences: jsonResponse.meta.total_sentences,
+        latency: finalLatency,
+        retryCount,
+        usedFallback,
+        usedBoundary: false,
+        validationErrors: validationResult?.errors,
+        modelUsed: this.config.model,
+        temperature: 0.7,
+        maxTokens: 800
+      });
+      
       logger.info('Therapist response generated', {
         sessionId: context.sessionId,
         promptVersion: this.config.therapistPromptVersion,
         retryCount,
-        latency: Date.now() - startTime,
-        responseLength: response.length
+        latency: finalLatency,
+        totalSentences: jsonResponse.meta.total_sentences,
+        usedFallback,
+        validatorPassed: validationResult?.isValid || false
       });
       
       return {
         success: true,
-        response,
+        jsonResponse,
+        response: this.formatResponseForDisplay(jsonResponse),
         promptVersion: this.config.therapistPromptVersion,
         validationResult,
         retryCount,
-        latency: Date.now() - startTime
+        latency: finalLatency,
+        usedFallback
       };
       
     } catch (error) {
@@ -236,10 +320,9 @@ export class TherapistOrchestrator {
   }
 
   /**
-   * Call OpenAI API
+   * Call OpenAI API for JSON response
    */
-  private async callOpenAI(systemPrompt: string, conversationHistory: string): Promise<string> {
-    // This is a mock implementation - in production, you would use the actual OpenAI API
+  private async callOpenAIForJson(systemPrompt: string, conversationHistory: string): Promise<any> {
     const { OpenAI } = await import('openai');
     
     const openai = new OpenAI({
@@ -259,17 +342,63 @@ export class TherapistOrchestrator {
         }
       ],
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 800,
+      response_format: { type: "json_object" }
     });
     
-    return completion.choices[0]?.message?.content || '';
+    const content = completion.choices[0]?.message?.content || '{}';
+    
+    try {
+      return JSON.parse(content);
+    } catch (error) {
+      logger.error('Failed to parse JSON response', {
+        error: error.message,
+        content: content.substring(0, 200) + '...'
+      });
+      throw new Error('Invalid JSON response from OpenAI');
+    }
+  }
+
+  /**
+   * Format JSON response for display
+   */
+  private formatResponseForDisplay(jsonResponse: TherapistV12): string {
+    let formatted = '';
+    
+    // MIRROR section
+    formatted += '**MIRROR**\n';
+    formatted += `- Partner A: ${jsonResponse.mirror.partnerA}\n`;
+    formatted += `- Partner B: ${jsonResponse.mirror.partnerB}\n\n`;
+    
+    // CLARIFY section
+    formatted += '**CLARIFY**\n';
+    formatted += `${jsonResponse.clarify}\n\n`;
+    
+    // EXPLORE section
+    formatted += '**EXPLORE**\n';
+    formatted += `${jsonResponse.explore}\n\n`;
+    
+    // MICRO-ACTIONS section
+    if (jsonResponse.micro_actions.length > 0) {
+      formatted += '**MICRO-ACTIONS**\n';
+      jsonResponse.micro_actions.forEach(action => {
+        formatted += `- ${action}\n`;
+      });
+      formatted += '\n';
+    }
+    
+    // CHECK section
+    formatted += '**CHECK**\n';
+    formatted += `${jsonResponse.check}\n`;
+    
+    return formatted;
   }
 
   /**
    * Get available prompt versions
    */
   getAvailableVersions(): string[] {
-    return ['v1', 'v2'];
+    return ['v1', 'v2', 'v1.2'];
   }
 
   /**
