@@ -1,4 +1,25 @@
-import { createSecureLogger, scrubForLogging } from '../api/src/middleware/log-scrubbing';
+// Simple logger for AI service (avoiding circular dependencies)
+const createSecureLogger = (context: string) => ({
+  info: (message: string, data?: any) => console.log(`[${context}] ${message}`, data ? '[REDACTED]' : ''),
+  warn: (message: string, data?: any) => console.warn(`[${context}] ${message}`, data ? '[REDACTED]' : ''),
+  error: (message: string, data?: any) => console.error(`[${context}] ${message}`, data ? '[REDACTED]' : ''),
+  debug: (message: string, data?: any) => console.debug(`[${context}] ${message}`, data ? '[REDACTED]' : '')
+});
+
+const scrubForLogging = (data: any) => {
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object' && data !== null) {
+    const scrubbed = { ...data };
+    const sensitiveKeys = ['password', 'token', 'secret', 'key', 'content', 'email'];
+    for (const key of sensitiveKeys) {
+      if (key in scrubbed) {
+        scrubbed[key] = '[REDACTED]';
+      }
+    }
+    return scrubbed;
+  }
+  return data;
+};
 
 // Central logger for AI service
 export const logger = createSecureLogger('AI');

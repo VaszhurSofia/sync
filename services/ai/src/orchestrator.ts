@@ -76,7 +76,7 @@ export class TherapistOrchestrator {
     } catch (error) {
       logger.error('Failed to load therapist prompt', {
         version,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw new Error(`Failed to load therapist prompt version ${version}`);
     }
@@ -140,8 +140,8 @@ export class TherapistOrchestrator {
       const conversationHistory = this.buildConversationHistory(context);
       
       // Generate response with retries
-      let jsonResponse: TherapistV12;
-      let validationResult;
+      let jsonResponse: TherapistV12 | null = null;
+      let validationResult: any = null;
       let lastError: Error | null = null;
       
       while (retryCount <= this.config.maxRetries) {
@@ -208,7 +208,7 @@ export class TherapistOrchestrator {
         } catch (error) {
           lastError = error as Error;
           logger.error('OpenAI API call failed', {
-            error: error.message,
+            error: error instanceof Error ? error.message : 'Unknown error',
             retryCount,
             sessionId: context.sessionId
           });
@@ -245,6 +245,11 @@ export class TherapistOrchestrator {
       
       const finalLatency = Date.now() - startTime;
       const usedFallback = validationResult?.warnings?.some(w => w.includes('fallback')) || false;
+      
+      // Ensure we have a valid response
+      if (!jsonResponse) {
+        throw new Error('Failed to generate valid response after all retries');
+      }
       
       // Record telemetry
       telemetryCollector.recordEvent({
@@ -286,7 +291,7 @@ export class TherapistOrchestrator {
       
     } catch (error) {
       logger.error('Therapist orchestrator failed', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         sessionId: context.sessionId,
         retryCount,
         latency: Date.now() - startTime
@@ -294,7 +299,7 @@ export class TherapistOrchestrator {
       
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         promptVersion: this.config.therapistPromptVersion,
         retryCount,
         latency: Date.now() - startTime
@@ -358,7 +363,7 @@ export class TherapistOrchestrator {
       return JSON.parse(content);
     } catch (error) {
       logger.error('Failed to parse JSON response', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         content: content.substring(0, 200) + '...'
       });
       throw new Error('Invalid JSON response from OpenAI');
