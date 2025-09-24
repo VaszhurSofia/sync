@@ -77,11 +77,27 @@ export interface ABTestConfig {
   sampleSize?: number;
   randomizeOrder: boolean;
   includeSurveyRatings: boolean;
+  sessionLogging: boolean; // Log per-session data (no content)
+  correlationAnalysis: boolean; // Include survey correlation analysis
+}
+
+export interface SessionLog {
+  sessionId: string;
+  promptVersion: string;
+  timestamp: Date;
+  metrics: {
+    latency: number;
+    retryCount: number;
+    success: boolean;
+    schemaCompliant: boolean;
+  };
+  // No content fields for privacy
 }
 
 export class EvaluationHarness {
   private orchestrator: TherapistOrchestrator;
   private scenarios: Map<string, EvaluationScenario[]> = new Map();
+  private sessionLogs: SessionLog[] = [];
 
   constructor(orchestrator: TherapistOrchestrator) {
     this.orchestrator = orchestrator;
@@ -289,6 +305,14 @@ export class EvaluationHarness {
       scenario.expectedOutcomes
     );
 
+    // Log session data for A/B testing
+    this.logSession(scenario.context.sessionId, promptVersion, {
+      latency,
+      retryCount: orchestratorResult.retryCount,
+      success: orchestratorResult.success,
+      schemaCompliant: validationResult?.isValid || false
+    });
+
     return {
       scenarioId: scenario.id,
       promptVersion,
@@ -447,24 +471,52 @@ export class EvaluationHarness {
       scoreDifference: number;
       significantDifference: boolean;
     };
+    sessionLogs?: SessionLog[];
+    correlationReport?: any;
   }> {
     const reports: EvaluationReport[] = [];
+    const sessionLogs: SessionLog[] = [];
+
+    // Clear previous session logs
+    this.sessionLogs = [];
 
     for (const version of config.versions) {
+      // Update orchestrator to use the specified prompt version
+      this.orchestrator.updateConfig({ therapistPromptVersion: version });
+      
       const report = await this.evaluatePromptVersion(version, config.scenarioSet);
       reports.push(report);
+
+      // Log session data if enabled
+      if (config.sessionLogging) {
+        const versionLogs = this.sessionLogs.filter(log => log.promptVersion === version);
+        sessionLogs.push(...versionLogs);
+      }
     }
 
     // Compare results
     const comparison = this.compareReports(reports);
 
+    // Generate correlation report if enabled
+    let correlationReport;
+    if (config.correlationAnalysis && config.includeSurveyRatings) {
+      correlationReport = await this.generateCorrelationReport(reports);
+    }
+
     logger.info('A/B test completed', {
       versions: config.versions,
       winner: comparison.winner,
-      scoreDifference: comparison.scoreDifference
+      scoreDifference: comparison.scoreDifference,
+      sessionLogsCount: sessionLogs.length,
+      hasCorrelationReport: !!correlationReport
     });
 
-    return { reports, comparison };
+    return { 
+      reports, 
+      comparison, 
+      sessionLogs: config.sessionLogging ? sessionLogs : undefined,
+      correlationReport
+    };
   }
 
   /**
@@ -507,5 +559,67 @@ export class EvaluationHarness {
    */
   getScenarioCount(scenarioSet: string): number {
     return this.scenarios.get(scenarioSet)?.length || 0;
+  }
+
+  /**
+   * Log session data (no content for privacy)
+   */
+  private logSession(sessionId: string, promptVersion: string, metrics: SessionLog['metrics']): void {
+    const sessionLog: SessionLog = {
+      sessionId,
+      promptVersion,
+      timestamp: new Date(),
+      metrics
+    };
+    
+    this.sessionLogs.push(sessionLog);
+    
+    logger.info('Session logged', {
+      sessionId,
+      promptVersion,
+      success: metrics.success,
+      schemaCompliant: metrics.schemaCompliant,
+      latency: metrics.latency,
+      retryCount: metrics.retryCount
+    });
+  }
+
+  /**
+   * Generate correlation report
+   */
+  private async generateCorrelationReport(reports: EvaluationReport[]): Promise<any> {
+    // This would integrate with the SurveyCorrelationAnalyzer
+    // For now, return a basic correlation analysis
+    const correlationData = reports.map(report => ({
+      promptVersion: report.promptVersion,
+      averageQualityScore: report.averageQualityScore,
+      schemaCompliance: report.schemaCompliance,
+      successfulResponses: report.successfulResponses,
+      totalScenarios: report.totalScenarios
+    }));
+
+    return {
+      correlationData,
+      analysis: 'Correlation analysis between prompt versions and quality metrics',
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Get session logs for a specific prompt version
+   */
+  getSessionLogs(promptVersion?: string): SessionLog[] {
+    if (promptVersion) {
+      return this.sessionLogs.filter(log => log.promptVersion === promptVersion);
+    }
+    return [...this.sessionLogs];
+  }
+
+  /**
+   * Clear session logs
+   */
+  clearSessionLogs(): void {
+    this.sessionLogs = [];
+    logger.info('Session logs cleared');
   }
 }

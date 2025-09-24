@@ -109,6 +109,7 @@ export class TherapistOrchestrator {
       // Generate response with retries
       let response: string;
       let validationResult;
+      let lastError: Error | null = null;
       
       while (retryCount <= this.config.maxRetries) {
         try {
@@ -118,12 +119,18 @@ export class TherapistOrchestrator {
           validationResult = parseTherapistResponse(response);
           
           if (validationResult.isValid) {
+            logger.info('Response generated successfully', {
+              sessionId: context.sessionId,
+              retryCount,
+              responseLength: response.length
+            });
             break;
           } else {
             logger.warn('Response validation failed', {
               errors: validationResult.errors,
               warnings: validationResult.warnings,
-              retryCount
+              retryCount,
+              responseLength: response.length
             });
             
             if (retryCount === this.config.maxRetries) {
@@ -134,17 +141,36 @@ export class TherapistOrchestrator {
                 errors: [],
                 warnings: ['Used fallback template due to validation failures']
               };
+              logger.warn('Using fallback template', {
+                sessionId: context.sessionId,
+                retryCount,
+                originalErrors: validationResult.errors
+              });
               break;
             }
           }
         } catch (error) {
+          lastError = error as Error;
           logger.error('OpenAI API call failed', {
             error: error.message,
-            retryCount
+            retryCount,
+            sessionId: context.sessionId
           });
           
           if (retryCount === this.config.maxRetries) {
-            throw error;
+            // Use fallback template on final failure
+            response = this.config.fallbackTemplate;
+            validationResult = {
+              isValid: true,
+              errors: [],
+              warnings: ['Used fallback template due to API failures']
+            };
+            logger.warn('Using fallback template due to API failure', {
+              sessionId: context.sessionId,
+              retryCount,
+              lastError: lastError.message
+            });
+            break;
           }
         }
         

@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { validateContentSafety } from '../safety/boundary-detector';
 import { getSafetyDetector } from '../../ai/safety/tier1-detector';
+import { getTier2Classifier } from '../../ai/safety/tier2-classifier';
 import { logger } from '../logger';
 
 /**
@@ -41,17 +42,42 @@ export async function safetyMiddleware(
   const tier1Detector = getSafetyDetector();
   const tier1Result = tier1Detector.checkMessage(content);
   
+  // Use Tier-2 classifier for nuanced detection
+  const tier2Classifier = getTier2Classifier();
+  const tier2Result = tier2Classifier.classifyMessage(content);
+  
   // Also use existing boundary detector for additional validation
   const boundaryValidation = validateContentSafety(content);
   
-  // Determine the highest risk level
+  // Determine the highest risk level from all detectors
   let highestRisk = 'low';
   let finalResult = tier1Result;
   
+  // Prioritize Tier-1 results (most reliable)
   if (tier1Result.riskLevel === 'high' || boundaryValidation.boundaryResult?.riskLevel === 'high') {
     highestRisk = 'high';
+    finalResult = tier1Result;
   } else if (tier1Result.riskLevel === 'medium' || boundaryValidation.boundaryResult?.riskLevel === 'medium') {
     highestRisk = 'medium';
+    finalResult = tier1Result;
+  } else if (tier2Result.riskLevel === 'high' && tier2Result.confidence >= 0.7) {
+    highestRisk = 'high';
+    finalResult = {
+      isSafe: false,
+      riskLevel: 'high',
+      action: 'block',
+      message: tier2Result.boundaryTemplate,
+      concerns: tier2Result.categories
+    };
+  } else if (tier2Result.riskLevel === 'medium' && tier2Result.confidence >= 0.7) {
+    highestRisk = 'medium';
+    finalResult = {
+      isSafe: false,
+      riskLevel: 'medium',
+      action: 'warn',
+      message: tier2Result.boundaryTemplate,
+      concerns: tier2Result.categories
+    };
   }
   
   // Handle safety violations
@@ -67,6 +93,8 @@ export async function safetyMiddleware(
       sessionId: context.sessionId,
       riskLevel: highestRisk,
       tier1Concerns: tier1Result.concerns,
+      tier2Concerns: tier2Result.categories,
+      tier2Confidence: tier2Result.confidence,
       boundaryConcerns: boundaryValidation.boundaryResult?.concerns,
       contentLength: content.length
     });
@@ -105,11 +133,12 @@ export async function safetyMiddleware(
   request.safetyContext = {
     boundaryResult: {
       riskLevel: highestRisk,
-      concerns: [...(tier1Result.concerns || []), ...(boundaryValidation.boundaryResult?.concerns || [])],
+      concerns: [...(tier1Result.concerns || []), ...(tier2Result.categories || []), ...(boundaryValidation.boundaryResult?.concerns || [])],
       tier1Result,
+      tier2Result,
       boundaryResult: boundaryValidation.boundaryResult
     },
-    isValid: tier1Result.isSafe && boundaryValidation.isValid
+    isValid: tier1Result.isSafe && boundaryValidation.isValid && tier2Result.action !== 'block'
   };
 }
 
@@ -210,7 +239,13 @@ export function getFrontendLock(context: SafetyContext): FrontendLock {
 declare module 'fastify' {
   interface FastifyRequest {
     safetyContext?: {
-      boundaryResult: any;
+      boundaryResult: {
+        riskLevel: string;
+        concerns: string[];
+        tier1Result: any;
+        tier2Result: any;
+        boundaryResult: any;
+      };
       isValid: boolean;
     };
   }

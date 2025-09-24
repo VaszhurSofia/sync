@@ -175,7 +175,7 @@ export function parseTherapistResponse(text: string): {
 } {
   try {
     // Check if it's boundary mode
-    if (text.includes('BOUNDARY_TEMPLATE') || text.includes('safety risk detected')) {
+    if (text.includes('BOUNDARY_TEMPLATE') || text.includes('safety risk detected') || text.includes('SAFETY_RISK')) {
       return {
         isValid: true,
         errors: [],
