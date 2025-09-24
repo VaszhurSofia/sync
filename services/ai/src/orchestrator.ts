@@ -168,7 +168,7 @@ export class TherapistOrchestrator {
             break;
           } else {
             logger.warn('Response validation failed', {
-              errors: validation.errors,
+              errors: validation.ok ? [] : validation.errors,
               retryCount,
               sessionId: context.sessionId
             });
@@ -194,7 +194,7 @@ export class TherapistOrchestrator {
               logger.warn('Using safe fallback template', {
                 sessionId: context.sessionId,
                 retryCount,
-                originalErrors: validation.errors
+                originalErrors: validation.ok ? [] : validation.errors
               });
               break;
             }
