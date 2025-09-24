@@ -85,20 +85,23 @@ export async function cryptoHealthHandler(request: FastifyRequest, reply: Fastif
   try {
     const healthStatus = await getCryptoHealth();
     
+    // Return the exact format requested: {kms:ok, dek_age_days, selftest:ok}
+    const response = {
+      kms: healthStatus.kms,
+      dek_age_days: healthStatus.dek_age_days,
+      selftest: healthStatus.selftest
+    };
+    
     // Return appropriate HTTP status based on health
     const httpStatus = healthStatus.status === 'healthy' ? 200 : 
                       healthStatus.status === 'degraded' ? 200 : 503;
     
-    reply.code(httpStatus).send(healthStatus);
+    reply.code(httpStatus).send(response);
   } catch (error) {
     reply.code(503).send({
-      status: 'unhealthy',
-      kmsConnection: false,
-      dekKeyStatus: 'error',
-      testVectorDecrypt: false,
-      encryptionMethod: 'Unknown',
-      lastChecked: new Date().toISOString(),
-      errors: [`Health check error: ${error}`],
+      kms: 'error',
+      dek_age_days: -1,
+      selftest: 'failed'
     });
   }
 }
