@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { AIResponseSchema, SafetyContext, SafetyStatus, FrontendLock, SafetyRateLimit, SurveyResponse, SurveyAnalytics, DeleteRequest, DeleteResult } from '@sync/types';
 import { validateContentSafety } from './safety/boundary-detector';
-import { safetyConfig } from './safety/config';
+import { SAFETY_CONFIG } from './safety/config';
 import { submitSurvey, getSurveyAnalytics, getAIInsights, clearSurveyResponses } from './survey/survey-system';
 import { requestHardDelete, confirmHardDelete, executeHardDelete, getDeleteRequestStatus, getAuditLogs, initializeDeleteData, clearAllData, deleteConfig } from './delete/hard-delete';
 import { rateLimiters, createDynamicRateLimit, getRateLimitStatus, resetRateLimit, rateLimitConfigs } from './middleware/rate-limit';
