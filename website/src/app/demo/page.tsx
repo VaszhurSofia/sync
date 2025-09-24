@@ -307,7 +307,11 @@ export default function DemoPage() {
             </p>
             <button 
               onClick={() => setCurrentStep(1)}
-              className={`btn-primary ${accentColor === 'blue' ? 'bg-blue-primary hover:bg-blue-secondary' : 'bg-green-primary hover:bg-green-secondary'}`}
+              className={`inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-white ${
+                accentColor === 'blue' 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
             >
               Start Demo
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -440,7 +444,7 @@ export default function DemoPage() {
               </div>
             </div>
             
-            {/* Structured Input */}
+            {/* Always show input area */}
             <div className="space-y-4">
               {communicationPhase === 'userA' && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -508,6 +512,33 @@ export default function DemoPage() {
                   </div>
                 </div>
               )}
+              
+              {/* Always show input field for general chat */}
+              <div className="p-4 bg-white border border-neutral-200 rounded-lg shadow-sm">
+                <h3 className="font-semibold text-neutral-900 mb-2">Continue the Conversation</h3>
+                <p className="text-sm text-neutral-600 mb-3">You can always add more thoughts or respond to the AI's suggestions.</p>
+                <div className="flex space-x-4">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message here..."
+                    className="flex-1 input"
+                    onKeyPress={(e) => e.key === 'Enter' && newMessage.trim() && handleStructuredResponse(newMessage)}
+                  />
+                  <button 
+                    onClick={() => newMessage.trim() && handleStructuredResponse(newMessage)}
+                    disabled={!newMessage.trim()}
+                    className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                      newMessage.trim() 
+                        ? `${accentColor === 'blue' ? 'bg-blue-primary hover:bg-blue-secondary' : 'bg-green-primary hover:bg-green-secondary'} text-white` 
+                        : 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
             </div>
             
             <div className="mt-6 flex justify-center space-x-4">
@@ -568,24 +599,24 @@ export default function DemoPage() {
             <div className="flex justify-center space-x-4 mb-6">
               <button 
                 onClick={() => handleSurveySubmit('angry')}
-                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-amber-500 transition-all"
+                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-amber-500 transition-all flex flex-col items-center"
               >
-                <Frown className="h-8 w-8 text-amber-500" />
-                <div className="text-sm mt-2">Not helpful</div>
+                <Frown className="h-8 w-8 text-amber-500 mb-2" />
+                <div className="text-sm">Not helpful</div>
               </button>
               <button 
                 onClick={() => handleSurveySubmit('neutral')}
-                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-blue-500 transition-all"
+                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-blue-500 transition-all flex flex-col items-center"
               >
-                <Meh className="h-8 w-8 text-blue-500" />
-                <div className="text-sm mt-2">Neutral</div>
+                <Meh className="h-8 w-8 text-blue-500 mb-2" />
+                <div className="text-sm">Neutral</div>
               </button>
               <button 
                 onClick={() => handleSurveySubmit('happy')}
-                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-green-500 transition-all"
+                className="p-4 border-2 border-neutral-300 rounded-lg hover:border-green-500 transition-all flex flex-col items-center"
               >
-                <Smile className="h-8 w-8 text-green-500" />
-                <div className="text-sm mt-2">Helpful</div>
+                <Smile className="h-8 w-8 text-green-500 mb-2" />
+                <div className="text-sm">Helpful</div>
               </button>
             </div>
             <p className="text-sm text-neutral-500">

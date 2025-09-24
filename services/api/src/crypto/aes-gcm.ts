@@ -3,6 +3,13 @@ import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
 
+// Field-specific encryption for database columns
+export const ENCRYPTED_FIELDS = {
+  'messages.content': 'content_enc',
+  'users.display_name': 'display_name_enc', 
+  'sessions.summary_text': 'summary_text_enc'
+} as const;
+
 interface EncryptionResult {
   ciphertext: Buffer;
   nonce: Buffer;
@@ -124,6 +131,8 @@ export class AESGCMEncryption {
    * Encrypt and encode for database storage
    */
   async encryptForStorage(plaintext: string): Promise<string> {
+    if (!plaintext) return '';
+    
     const result = await this.encrypt(plaintext);
     
     // Combine nonce + tag + ciphertext
@@ -134,9 +143,18 @@ export class AESGCMEncryption {
   }
 
   /**
+   * Encrypt specific database field
+   */
+  async encryptField(fieldName: keyof typeof ENCRYPTED_FIELDS, plaintext: string): Promise<string> {
+    return this.encryptForStorage(plaintext);
+  }
+
+  /**
    * Decode and decrypt from database storage
    */
   async decryptFromStorage(encryptedData: string): Promise<string> {
+    if (!encryptedData) return '';
+    
     try {
       const combined = Buffer.from(encryptedData, 'base64');
       
@@ -155,6 +173,13 @@ export class AESGCMEncryption {
     } catch (error) {
       throw new Error(`Failed to decrypt data: ${error.message}`);
     }
+  }
+
+  /**
+   * Decrypt specific database field
+   */
+  async decryptField(fieldName: keyof typeof ENCRYPTED_FIELDS, encryptedData: string): Promise<string> {
+    return this.decryptFromStorage(encryptedData);
   }
 
   /**

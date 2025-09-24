@@ -1,5 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { validateContentSafety } from '../safety/boundary-detector';
+import { getSafetyDetector } from '../../ai/safety/tier1-detector';
+import { logger } from '../logger';
 
 /**
  * M4: Safety Middleware
@@ -14,7 +16,7 @@ export interface SafetyContext {
 }
 
 /**
- * Safety middleware for message content validation
+ * Enhanced safety middleware with Tier-1 detection and boundary flag
  */
 export async function safetyMiddleware(
   request: FastifyRequest,
@@ -35,46 +37,64 @@ export async function safetyMiddleware(
     return;
   }
   
-  // Validate content safety
-  const validation = validateContentSafety(content);
+  // Use Tier-1 safety detector
+  const tier1Detector = getSafetyDetector();
+  const tier1Result = tier1Detector.checkMessage(content);
   
-  if (!validation.isValid) {
-    const { boundaryResult, safetyResponse } = validation;
+  // Also use existing boundary detector for additional validation
+  const boundaryValidation = validateContentSafety(content);
+  
+  // Determine the highest risk level
+  let highestRisk = 'low';
+  let finalResult = tier1Result;
+  
+  if (tier1Result.riskLevel === 'high' || boundaryValidation.boundaryResult?.riskLevel === 'high') {
+    highestRisk = 'high';
+  } else if (tier1Result.riskLevel === 'medium' || boundaryValidation.boundaryResult?.riskLevel === 'medium') {
+    highestRisk = 'medium';
+  }
+  
+  // Handle safety violations
+  if (!tier1Result.isSafe || !boundaryValidation.isValid) {
+    const safetyResponse = tier1Result.message ? {
+      message: tier1Result.message,
+      resources: tier1Result.resources || []
+    } : boundaryValidation.safetyResponse;
     
     // Log the safety violation
-    request.log.warn('Safety boundary violation detected', {
+    logger.warn('Safety boundary violation detected', {
       userId: context.userId,
       sessionId: context.sessionId,
-      riskLevel: boundaryResult.riskLevel,
-      concerns: boundaryResult.concerns,
-      matchedPatterns: boundaryResult.matchedPatterns,
+      riskLevel: highestRisk,
+      tier1Concerns: tier1Result.concerns,
+      boundaryConcerns: boundaryValidation.boundaryResult?.concerns,
       contentLength: content.length
     });
     
     // Return appropriate response based on risk level
-    if (boundaryResult.riskLevel === 'high') {
+    if (highestRisk === 'high') {
       reply.code(403).send({
         error: 'Content blocked for safety reasons',
         message: safetyResponse?.message || 'This content cannot be processed due to safety concerns.',
         resources: safetyResponse?.resources || [],
-        action: safetyResponse?.action || 'block',
+        action: 'block',
         boundaryResult: {
-          riskLevel: boundaryResult.riskLevel,
-          concerns: boundaryResult.concerns
+          riskLevel: highestRisk,
+          concerns: [...(tier1Result.concerns || []), ...(boundaryValidation.boundaryResult?.concerns || [])]
         }
       });
       return;
     }
     
-    if (boundaryResult.riskLevel === 'medium') {
+    if (highestRisk === 'medium') {
       reply.code(422).send({
         error: 'Content flagged for review',
         message: safetyResponse?.message || 'This content has been flagged for safety review.',
         resources: safetyResponse?.resources || [],
-        action: safetyResponse?.action || 'warn',
+        action: 'warn',
         boundaryResult: {
-          riskLevel: boundaryResult.riskLevel,
-          concerns: boundaryResult.concerns
+          riskLevel: highestRisk,
+          concerns: [...(tier1Result.concerns || []), ...(boundaryValidation.boundaryResult?.concerns || [])]
         }
       });
       return;
@@ -83,8 +103,13 @@ export async function safetyMiddleware(
   
   // Add safety metadata to request for downstream processing
   request.safetyContext = {
-    boundaryResult: validation.boundaryResult,
-    isValid: validation.isValid
+    boundaryResult: {
+      riskLevel: highestRisk,
+      concerns: [...(tier1Result.concerns || []), ...(boundaryValidation.boundaryResult?.concerns || [])],
+      tier1Result,
+      boundaryResult: boundaryValidation.boundaryResult
+    },
+    isValid: tier1Result.isSafe && boundaryValidation.isValid
   };
 }
 

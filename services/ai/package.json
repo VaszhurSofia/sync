@@ -10,7 +10,14 @@
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:evaluation": "jest tests/evaluation.test.ts",
+    "test:schema-compliance": "jest tests/therapist-prompt.test.ts --testNamePattern='schema|validation'",
+    "test:prompt-variants": "jest tests/therapist-prompt.test.ts --testNamePattern='25 Canned Scenarios'",
+    "generate-eval-report": "tsx src/scripts/generate-eval-report.ts",
+    "analyze-survey-correlation": "tsx src/scripts/analyze-survey-correlation.ts",
+    "check-compliance-threshold": "tsx src/scripts/check-compliance-threshold.ts",
+    "run-ab-test": "tsx src/scripts/run-ab-test.ts"
   },
   "dependencies": {
     "fastify": "^4.24.3",

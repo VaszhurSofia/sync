@@ -116,16 +116,16 @@ export async function POST(request: NextRequest) {
       
     case 'create_couple':
       const { userToken } = body;
-      const user = Array.from(demoUsers.values()).find(u => u.token === userToken);
+      const foundUser = Array.from(demoUsers.values()).find(u => u.token === userToken);
       
-      if (!user) {
+      if (!foundUser) {
         return NextResponse.json({ error: 'Invalid user token' }, { status: 401 });
       }
       
       const coupleId = `demo_couple_${Date.now()}`;
       const couple = {
         id: coupleId,
-        userAId: user.id,
+        userAId: foundUser.id,
         userBId: null
       };
       

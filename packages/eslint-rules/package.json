@@ -1,0 +1,21 @@
+{
+  "name": "@sync/eslint-rules",
+  "version": "1.0.0",
+  "description": "ESLint rules for Sync platform",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "no-plaintext-logs.js"
+  ],
+  "keywords": [
+    "eslint",
+    "rules",
+    "security",
+    "logging"
+  ],
+  "author": "Sync Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  }
+}
