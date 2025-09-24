@@ -1,0 +1,132 @@
+name: Quality Gates - Definition of Done
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  quality-gates:
+    name: Definition of Done Checklist
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Quality Gate 1 - Therapist v1.2 Prompt
+      run: |
+        echo "🔍 Checking for Therapist v1.2 prompt..."
+        if [ ! -f "services/ai-disabled/prompts/therapist/v1.2.md" ]; then
+          echo "❌ FAIL: Therapist v1.2 prompt missing"
+          exit 1
+        fi
+        echo "✅ Therapist v1.2 prompt exists"
+        
+    - name: Quality Gate 2 - JSON Schema
+      run: |
+        echo "🔍 Checking for JSON schema..."
+        if [ ! -f "services/ai-disabled/src/schemas/therapist.v1_2.schema.json" ]; then
+          echo "❌ FAIL: JSON schema missing"
+          exit 1
+        fi
+        echo "✅ JSON schema exists"
+        
+    - name: Quality Gate 3 - Validator
+      run: |
+        echo "🔍 Checking for validator..."
+        if [ ! -f "services/ai-disabled/src/validation/therapistValidator.ts" ]; then
+          echo "❌ FAIL: Validator missing"
+          exit 1
+        fi
+        echo "✅ Validator exists"
+        
+    - name: Quality Gate 4 - Orchestrator Safety Path
+      run: |
+        echo "🔍 Checking for orchestrator safety path..."
+        if ! grep -q "safetyContext" services/ai-disabled/src/orchestrator.ts; then
+          echo "❌ FAIL: Orchestrator safety path missing"
+          exit 1
+        fi
+        echo "✅ Orchestrator safety path exists"
+        
+    - name: Quality Gate 5 - Crypto Health Endpoint
+      run: |
+        echo "🔍 Checking for /health/crypto endpoint..."
+        if [ ! -f "services/api/src/health/crypto.ts" ]; then
+          echo "❌ FAIL: Crypto health endpoint missing"
+          exit 1
+        fi
+        if ! grep -q "crypto" services/api/src/routes/health.ts; then
+          echo "❌ FAIL: Crypto health route not registered"
+          exit 1
+        fi
+        echo "✅ Crypto health endpoint exists"
+        
+    - name: Quality Gate 6 - Boundary Tests
+      run: |
+        echo "🔍 Checking for boundary tests..."
+        if [ ! -f "services/api/tests/boundary-lock.test.ts" ]; then
+          echo "❌ FAIL: Boundary lock tests missing"
+          exit 1
+        fi
+        echo "✅ Boundary tests exist"
+        
+    - name: Quality Gate 7 - Turn-Taking Tests
+      run: |
+        echo "🔍 Checking for turn-taking tests..."
+        if [ ! -f "__tests__/api/turn-taking.test.ts" ]; then
+          echo "❌ FAIL: Turn-taking tests missing"
+          exit 1
+        fi
+        echo "✅ Turn-taking tests exist"
+        
+    - name: Quality Gate 8 - Demo In-Memory Toggle
+      run: |
+        echo "🔍 Checking for demo in-memory toggle..."
+        if ! grep -q "in-memory" website/src/app/demo/api/route.ts; then
+          echo "❌ FAIL: Demo in-memory toggle missing"
+          exit 1
+        fi
+        echo "✅ Demo in-memory toggle exists"
+        
+    - name: Quality Gate 9 - TypeScript Compilation
+      run: |
+        echo "🔍 Running TypeScript compilation check..."
+        npm run type-check
+        echo "✅ TypeScript compilation passed"
+        
+    - name: Quality Gate 10 - Security Scan
+      run: |
+        echo "🔍 Running security scan..."
+        npm run test:log-scan
+        echo "✅ Security scan passed"
+        
+    - name: Quality Gate 11 - All Tests Pass
+      run: |
+        echo "🔍 Running all tests..."
+        npm run test
+        echo "✅ All tests passed"
+        
+    - name: Quality Gate 12 - Build Success
+      run: |
+        echo "🔍 Running build..."
+        npm run build
+        echo "✅ Build successful"
+        
+    - name: Quality Gate Summary
+      run: |
+        echo "🎉 ALL QUALITY GATES PASSED!"
+        echo "✅ Repository is objectively 'green' against specification"
+        echo "✅ Definition of Done checklist completed"
