@@ -24,7 +24,7 @@ fastify.post('/auth/request-code', async (request, reply) => {
   verificationCodes.set(email, { code, expiresAt: Date.now() + 10 * 60 * 1000 });
   
   // Log the code for testing
-  console.log(`🔑 Verification code for ${email}: ${code}`);
+  console.log(`🔑 Verification code sent to user`);
   
   reply.code(204).send();
 });
