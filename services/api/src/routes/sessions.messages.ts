@@ -6,6 +6,7 @@ import { getLongPollManager } from '../lib/longpoll';
 import { v4 as uuidv4 } from 'uuid';
 import { safetyMiddleware, SafetyContext } from '../middleware/safety';
 import { boundaryLockMiddleware, BoundaryLockContext } from '../middleware/boundary-lock';
+import { TurnStateMachine, createTurnStateMiddleware } from '../middleware/turn-state-machine';
 
 interface SendMessageRequest {
   content: string;
@@ -94,6 +95,26 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       // If boundary lock middleware sent a response, return early
       if (reply.sent) {
         return;
+      }
+
+      // Validate turn state (409 on wrong turn)
+      const turnValidation = TurnStateMachine.validateTurn(
+        session.turnState || 'awaitingA',
+        user.id,
+        session.userAId,
+        session.userBId
+      );
+
+      if (!turnValidation.isValid) {
+        return reply.code(409).send({
+          messageId: '',
+          status: 'rejected',
+          reason: turnValidation.error,
+          turnState: {
+            current: turnValidation.currentState,
+            expected: turnValidation.expectedState
+          }
+        });
       }
 
       // Get couple information

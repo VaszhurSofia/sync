@@ -116,15 +116,29 @@ async function registerRoutes() {
   // Register route modules
   const { authRoutes } = await import('./routes/auth');
   const { couplesRoutes } = await import('./routes/couples');
+  const { healthRoutes } = await import('./routes/health');
+  const { sessionMessagesRoutes } = await import('./routes/sessions.messages');
+  const { sessionDeleteRoutes } = await import('./routes/sessions.delete');
+  const { metricsRoutes } = await import('./routes/metrics');
+  
+  await fastify.register(healthRoutes);
   await fastify.register(authRoutes);
   await fastify.register(couplesRoutes);
+  await fastify.register(sessionMessagesRoutes);
+  await fastify.register(sessionDeleteRoutes);
+  await fastify.register(metricsRoutes);
 
   // Staging gate
-  if (process.env.NODE_ENV === 'staging') {
+  if (process.env.STAGING === 'true') {
     fastify.addHook('onRequest', async (request, reply) => {
-      const auth = request.headers.authorization;
-      if (!auth || auth !== `Basic ${Buffer.from(process.env.STAGING_AUTH || 'admin:password').toString('base64')}`) {
-        reply.code(401).send({ error: 'Unauthorized' });
+      const auth = request.headers.get('authorization');
+      const validAuth = `Basic ${Buffer.from(process.env.STAGING_AUTH || 'admin:password').toString('base64')}`;
+      
+      if (!auth || auth !== validAuth) {
+        reply.code(401).send({ 
+          error: 'Unauthorized',
+          message: 'Staging environment requires authentication'
+        });
       }
     });
   }
