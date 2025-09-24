@@ -1,0 +1,23 @@
+name: Ultra Simple Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ultra-simple:
+    name: Ultra Simple Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Basic commands
+      run: |
+        echo "🔍 Basic environment test"
+        echo "Current directory: $(pwd)"
+        echo "Node version: $(node --version 2>/dev/null || echo 'Node not available')"
+        echo "npm version: $(npm --version 2>/dev/null || echo 'npm not available')"
+        echo "Directory contents:"
+        ls -la
+        echo "✅ Basic test completed"
