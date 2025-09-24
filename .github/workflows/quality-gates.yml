@@ -19,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         
     - name: Install dependencies
@@ -110,6 +110,11 @@ jobs:
     - name: Quality Gate 10 - Security Scan
       run: |
         echo "🔍 Running security scan..."
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "Services directory:"
+        ls -la services/ || echo "Services directory not found"
         npm run test:log-scan
         echo "✅ Security scan passed"
         

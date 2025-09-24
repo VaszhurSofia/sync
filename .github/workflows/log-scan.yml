@@ -5,14 +5,12 @@ on:
     paths:
       - 'services/**'
       - 'website/**'
-      - 'app-mobile/**'
       - '__tests__/security/**'
   push:
     branches: [main]
     paths:
       - 'services/**'
       - 'website/**'
-      - 'app-mobile/**'
       - '__tests__/security/**'
 
 jobs:
@@ -26,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -34,6 +32,13 @@ jobs:
         
       - name: Run log security scan
         run: |
+          echo "🔍 Debugging log security scan..."
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Services directory:"
+          ls -la services/ || echo "Services directory not found"
+          echo "Running log security scan..."
           npm run test:log-scan
           
       - name: Upload scan report
