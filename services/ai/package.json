@@ -17,7 +17,8 @@
     "generate-eval-report": "tsx src/scripts/generate-eval-report.ts",
     "analyze-survey-correlation": "tsx src/scripts/analyze-survey-correlation.ts",
     "check-compliance-threshold": "tsx src/scripts/check-compliance-threshold.ts",
-    "run-ab-test": "tsx src/scripts/run-ab-test.ts"
+    "run-ab-test": "tsx src/scripts/run-ab-test.ts",
+    "prompt-version-eval": "tsx src/scripts/prompt-version-eval.ts"
   },
   "dependencies": {
     "fastify": "^4.24.3",

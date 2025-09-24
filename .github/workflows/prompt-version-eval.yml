@@ -1,0 +1,79 @@
+name: Prompt Version Evaluation
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Comma-separated list of prompt versions to test'
+        required: false
+        default: 'v1.2,v1.2a,v1.2b'
+      sample_size:
+        description: 'Number of scenarios to test per version'
+        required: false
+        default: '25'
+
+jobs:
+  evaluate-prompt-versions:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        cd services/ai
+        npm ci
+        
+    - name: Run prompt version evaluation
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_MODEL: gpt-4
+        THERAPIST_PROMPT_VERSIONS: ${{ github.event.inputs.versions || 'v1.2,v1.2a,v1.2b' }}
+        EVAL_SAMPLE_SIZE: ${{ github.event.inputs.sample_size || '25' }}
+      run: |
+        cd services/ai
+        npm run prompt-version-eval
+        
+    - name: Upload evaluation results
+      uses: actions/upload-artifact@v4
+      with:
+        name: prompt-version-eval-results
+        path: |
+          services/ai/prompt-version-eval-*.csv
+          services/ai/prompt-version-eval-*.json
+          services/ai/prompt-version-report-*.md
+        retention-days: 30
+        
+    - name: Comment on PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Find the latest report file
+          const reportFiles = fs.readdirSync('services/ai')
+            .filter(f => f.startsWith('prompt-version-report-') && f.endsWith('.md'));
+          
+          if (reportFiles.length > 0) {
+            const latestReport = reportFiles.sort().pop();
+            const reportContent = fs.readFileSync(`services/ai/${latestReport}`, 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Prompt Version Evaluation Results\n\n${reportContent}`
+            });
+          }
