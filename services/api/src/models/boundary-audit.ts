@@ -23,6 +23,8 @@ export interface CreateBoundaryAuditData {
   boundaryType: 'safety' | 'content' | 'behavioral';
   triggerReason: string;
   action: 'boundary_lock' | 'boundary_warn' | 'boundary_clear';
+  riskLevel?: 'low' | 'medium' | 'high';
+  concerns?: string[];
   metadata?: Record<string, any>;
 }
 

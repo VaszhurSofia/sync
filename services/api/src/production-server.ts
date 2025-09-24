@@ -638,21 +638,21 @@ fastify.get('/safety/status', {
   const violations = safetyViolations.get(userId) || 0;
 
   const rateLimit: SafetyRateLimit = {
-    maxRequests: safetyConfig.rateLimit.maxRequests,
-    windowMs: safetyConfig.rateLimit.windowMs,
-    message: `You can send ${safetyConfig.rateLimit.maxRequests} messages per ${safetyConfig.rateLimit.windowMs / 1000} seconds.`,
+    maxRequests: SAFETY_CONFIG.rateLimit.maxRequests,
+    windowMs: SAFETY_CONFIG.rateLimit.windowMs,
+    message: `You can send ${SAFETY_CONFIG.rateLimit.maxRequests} messages per ${SAFETY_CONFIG.rateLimit.windowMs / 1000} seconds.`,
   };
 
   const frontendLock: FrontendLock = {
-    isLocked: violations >= safetyConfig.maxViolationsBeforeLock,
-    reason: violations >= safetyConfig.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
-    message: violations >= safetyConfig.maxViolationsBeforeLock
-      ? safetyConfig.safetyTemplates.frontend_lock.response.message
+    isLocked: violations >= SAFETY_CONFIG.maxViolationsBeforeLock,
+    reason: violations >= SAFETY_CONFIG.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
+    message: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.message
       : 'No frontend lock active.',
-    resources: violations >= safetyConfig.maxViolationsBeforeLock
-      ? safetyConfig.safetyTemplates.frontend_lock.response.resources
+    resources: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.resources
       : [],
-    unlockConditions: violations >= safetyConfig.maxViolationsBeforeLock
+    unlockConditions: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
       ? ['Contact support', 'Review safety guidelines']
       : [],
   };
@@ -662,7 +662,7 @@ fastify.get('/safety/status', {
     violations: violations,
     rateLimit: rateLimit,
     frontendLock: frontendLock,
-    safetyGuidelines: safetyConfig.safetyGuidelines,
+    safetyGuidelines: SAFETY_CONFIG.safetyGuidelines,
   };
 
   reply.send(safetyStatus);
@@ -671,7 +671,7 @@ fastify.get('/safety/status', {
 fastify.get('/safety/eu-resources', {
   preHandler: rateLimiters.general
 }, async (request, reply) => {
-  reply.send(safetyConfig.euResources);
+  reply.send(SAFETY_CONFIG.euResources);
 });
 
 // Survey endpoints

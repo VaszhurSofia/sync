@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { validateContentSafety } from '../safety/boundary-detector';
-import { getSafetyDetector } from '../../ai/safety/tier1-detector';
-import { getTier2Classifier } from '../../ai/safety/tier2-classifier';
+import { detectTier1Safety } from '../safety/tier1-detector';
+import { classifyTier2Safety } from '../safety/tier2-classifier';
 import { logger } from '../logger';
 
 /**
@@ -39,12 +39,8 @@ export async function safetyMiddleware(
   }
   
   // Use Tier-1 safety detector
-  const tier1Detector = getSafetyDetector();
-  const tier1Result = tier1Detector.checkMessage(content);
-  
-  // Use Tier-2 classifier for nuanced detection
-  const tier2Classifier = getTier2Classifier();
-  const tier2Result = tier2Classifier.classifyMessage(content);
+  const tier1Result = detectTier1Safety(content);
+  const tier2Result = classifyTier2Safety(content);
   
   // Also use existing boundary detector for additional validation
   const boundaryValidation = validateContentSafety(content);

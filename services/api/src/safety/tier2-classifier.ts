@@ -5,6 +5,10 @@ export interface Tier2Result {
   riskLevel: 'low' | 'medium' | 'high';
   confidence: number;
   concerns: string[];
+  boundaryTemplate: string;
+  categories: string[];
+  message: string;
+  action: string;
 }
 
 export function classifyTier2Safety(content: string): Tier2Result {
@@ -29,6 +33,10 @@ export function classifyTier2Safety(content: string): Tier2Result {
   return {
     riskLevel,
     confidence,
-    concerns
+    concerns,
+    boundaryTemplate: riskLevel === 'high' ? 'Safety boundary template' : 'Standard template',
+    categories: concerns.length > 0 ? ['safety', 'content'] : [],
+    message: concerns.length > 0 ? 'Content requires review' : 'Content is appropriate',
+    action: riskLevel === 'high' ? 'block' : 'allow'
   };
 }

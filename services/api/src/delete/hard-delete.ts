@@ -367,3 +367,90 @@ Estimated records to be deleted: ${estimatedRecords}`;
     gracePeriod: config.gracePeriod,
   };
 }
+
+/**
+ * Request hard delete (stub implementation)
+ */
+export async function requestHardDelete(
+  userId: string,
+  reason: DeleteRequest['reason']
+): Promise<DeleteRequest> {
+  const request = createDeleteRequest(userId, reason, {
+    userId,
+    includeSessions: true,
+    includeMessages: true,
+    includeSurveyResponses: true,
+    includeSafetyViolations: true,
+    includeAnalytics: true,
+    includeAuditLogs: true,
+  });
+  
+  // In a real implementation, this would save to database
+  console.log('Delete request created:', request);
+  return request;
+}
+
+/**
+ * Confirm hard delete (stub implementation)
+ */
+export async function confirmHardDelete(
+  deleteRequestId: string,
+  confirmationId: string
+): Promise<DeleteResult> {
+  // In a real implementation, this would validate confirmation and execute delete
+  console.log('Delete confirmed:', deleteRequestId, confirmationId);
+  return {
+    success: true,
+    deletedRecords: {
+      users: 1,
+      couples: 0,
+      sessions: 0,
+      messages: 0,
+      surveyResponses: 0,
+      safetyViolations: 0,
+      analytics: 0,
+      auditLogs: 0,
+    },
+    errors: [],
+    completedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get delete request status (stub implementation)
+ */
+export async function getDeleteRequestStatus(deleteRequestId: string): Promise<DeleteRequest | null> {
+  // In a real implementation, this would query the database
+  console.log('Getting delete request status:', deleteRequestId);
+  return null;
+}
+
+/**
+ * Get audit logs (stub implementation)
+ */
+export async function getAuditLogs(userId: string): Promise<any[]> {
+  // In a real implementation, this would query the database
+  console.log('Getting audit logs for user:', userId);
+  return [];
+}
+
+/**
+ * Initialize delete data (stub implementation)
+ */
+export async function initializeDeleteData(): Promise<void> {
+  // In a real implementation, this would initialize data stores
+  console.log('Delete data initialized');
+}
+
+/**
+ * Clear all data (stub implementation)
+ */
+export async function clearAllData(): Promise<void> {
+  // In a real implementation, this would clear all data stores
+  console.log('All data cleared');
+}
+
+/**
+ * Export delete config
+ */
+export { DEFAULT_DELETE_CONFIG as deleteConfig };

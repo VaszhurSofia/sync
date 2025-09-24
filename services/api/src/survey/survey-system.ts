@@ -290,3 +290,56 @@ export function formatSurveyResponse(response: SurveyResponse): {
     submittedAt: response.submittedAt,
   };
 }
+
+/**
+ * Submit a survey response (stub implementation)
+ */
+export async function submitSurvey(
+  sessionId: string,
+  userId: string,
+  rating: 'angry' | 'neutral' | 'happy',
+  feedback?: string
+): Promise<SurveyResponse> {
+  const response = createSurveyResponse(sessionId, userId, rating, feedback);
+  // In a real implementation, this would save to database
+  console.log('Survey submitted:', response);
+  return response;
+}
+
+/**
+ * Get survey analytics (stub implementation)
+ */
+export async function getSurveyAnalytics(): Promise<SurveyAnalytics> {
+  // In a real implementation, this would query the database
+  return {
+    totalResponses: 0,
+    ratingDistribution: { angry: 0, neutral: 0, happy: 0 },
+    averageRating: 0,
+    responseRate: 0,
+    recentTrends: {
+      last7Days: [],
+      last30Days: [],
+    },
+  };
+}
+
+/**
+ * Get AI insights from survey data (stub implementation)
+ */
+export async function getAIInsights(): Promise<{
+  insights: string[];
+  recommendations: string[];
+}> {
+  return {
+    insights: ['No survey data available yet'],
+    recommendations: ['Encourage users to provide feedback'],
+  };
+}
+
+/**
+ * Clear survey responses (stub implementation)
+ */
+export async function clearSurveyResponses(): Promise<void> {
+  // In a real implementation, this would clear from database
+  console.log('Survey responses cleared');
+}

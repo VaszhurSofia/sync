@@ -12,8 +12,11 @@ export const SAFETY_CONFIG = {
   rateLimiting: {
     enabled: true,
     maxViolations: 3, // Max violations before lockout
+    maxViolationsBeforeLock: 3, // Max violations before lockout
     lockoutDuration: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
     warningThreshold: 1, // Show warning after this many violations
+    maxRequests: 100, // Max requests per window
+    windowMs: 15 * 60 * 1000, // 15 minutes
   },
   
   // Content length thresholds
@@ -84,6 +87,52 @@ export const SAFETY_CONFIG = {
     maxRetries: 3,
   },
   
+  // Safety templates
+  safetyTemplates: {
+    selfHarm: {
+      id: 'self_harm',
+      name: 'Self-Harm Concerns',
+      priority: 'high',
+      autoBlock: true,
+    },
+    abuse: {
+      id: 'abuse',
+      name: 'Abuse or Violence',
+      priority: 'high',
+      autoBlock: true,
+    },
+    relationshipCrisis: {
+      id: 'relationship_crisis',
+      name: 'Relationship Crisis',
+      priority: 'medium',
+      autoBlock: false,
+    },
+    mentalHealth: {
+      id: 'mental_health',
+      name: 'Mental Health Concerns',
+      priority: 'medium',
+      autoBlock: false,
+    },
+    frontend_lock: {
+      id: 'frontend_lock',
+      name: 'Frontend Lock',
+      priority: 'high',
+      autoBlock: true,
+    },
+  },
+
+  // Safety guidelines
+  safetyGuidelines: [
+    'Be respectful and kind in your communication',
+    'Avoid content that could be harmful to yourself or others',
+    'Seek professional help if you\'re struggling with serious issues',
+    'Remember that this is a communication tool, not a replacement for therapy',
+    'If you\'re in immediate danger, contact emergency services (112)',
+    'Use "I" statements to express your feelings and needs',
+    'Take breaks if conversations become too intense',
+    'Respect your partner\'s boundaries and communicate your own'
+  ],
+
   // Development/testing overrides
   development: {
     bypassSafety: false, // Set to true to bypass safety checks in development

@@ -86,9 +86,11 @@ async function registerPlugins() {
 async function registerAuth() {
   const { authenticate, optionalAuthenticate } = await import('./middleware/auth');
   const { createLogScrubbingMiddleware } = await import('./middleware/log-scrubbing');
+  const { pool } = await import('./utils/database');
   
   fastify.decorate('authenticate', authenticate);
   fastify.decorate('optionalAuthenticate', optionalAuthenticate);
+  fastify.decorate('pg', pool);
   
   // Register log scrubbing middleware to prevent API key leaks
   fastify.addHook('onRequest', createLogScrubbingMiddleware());

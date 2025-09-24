@@ -7,6 +7,8 @@ export type TurnState = 'awaitingA' | 'awaitingB' | 'ai_reflect' | 'boundary';
 export interface Session {
   id: string;
   coupleId: string;
+  userAId: string;
+  userBId: string;
   startedAt: Date;
   endedAt?: Date;
   turnState: TurnState;
@@ -333,6 +335,8 @@ export class SessionModel {
     return {
       id: row.id,
       coupleId: row.couple_id,
+      userAId: row.user_a_id || '',
+      userBId: row.user_b_id || '',
       startedAt: row.started_at,
       endedAt: row.ended_at,
       turnState: row.turn_state,

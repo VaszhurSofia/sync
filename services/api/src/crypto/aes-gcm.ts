@@ -68,6 +68,25 @@ export class AESGCMEncryption {
   }
 
   /**
+   * Get DEK information
+   */
+  getDEKInfo(): {
+    isDerived: boolean;
+    ageDays: number;
+    derivedAt: Date | null;
+    createdAt: Date | null;
+    kmsKeyId: string;
+  } {
+    return {
+      isDerived: this.dek !== null,
+      ageDays: this.getDEKAge(),
+      derivedAt: this.dekDerivedAt,
+      createdAt: this.dekDerivedAt,
+      kmsKeyId: this.kmsKeyId,
+    };
+  }
+
+  /**
    * Ensure DEK is available
    */
   private async ensureDEK(): Promise<Buffer> {
