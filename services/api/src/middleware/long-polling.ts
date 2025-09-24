@@ -265,7 +265,7 @@ export function createLongPollingMiddleware() {
         reply.code(200).send(result);
       }
     } catch (error) {
-      if (error instanceof Error ? error.message : "Unknown error" === 'Client aborted long-poll') {
+      if (error instanceof Error && error.message === 'Client aborted long-poll') {
         reply.code(200).send({ aborted: true, message: 'Poll aborted by client' });
       } else {
         reply.code(500).send({ error: 'Long-poll error', message: error instanceof Error ? error.message : "Unknown error" });

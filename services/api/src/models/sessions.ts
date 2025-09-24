@@ -199,7 +199,7 @@ export class SessionModel {
       
       logger.info('Session deleted', { sessionId });
       
-      return result.rowCount > 0;
+      return (result.rowCount ?? 0) > 0;
     } catch (error) {
       logger.error('Failed to delete session', { error: error instanceof Error ? error.message : "Unknown error", sessionId });
       throw error;

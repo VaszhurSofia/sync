@@ -97,8 +97,8 @@ export function addStagingHeaders(request: FastifyRequest, reply: FastifyReply) 
   const originalSend = reply.send;
   reply.send = function(payload) {
     if (typeof payload === 'object' && payload !== null) {
-      payload._staging_warning = STAGING_CONFIG.stagingBanner;
-      payload._staging_notice = 'This is a staging environment. Data may be reset at any time.';
+      (payload as any)._staging_warning = STAGING_CONFIG.stagingBanner;
+      (payload as any)._staging_notice = 'This is a staging environment. Data may be reset at any time.';
     }
     return originalSend.call(this, payload);
   };

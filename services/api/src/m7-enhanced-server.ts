@@ -96,7 +96,7 @@ fastify.post('/auth/verify-code', {
     };
     users.set(email, user);
     // Initialize data for hard delete system demo
-    initializeDeleteData(user.id, `couple_${user.id}`, `session_${user.id}`);
+    await initializeDeleteData();
   }
 
   const token = `token_${user.id}_${Date.now()}`;
@@ -425,7 +425,7 @@ fastify.post('/sessions/:id/messages', {
       }
 
     } catch (aiError) {
-      fastify.log.error('Error calling AI service:', aiError);
+      fastify.log.error({ error: aiError instanceof Error ? aiError.message : 'Unknown error' }, 'Error calling AI service');
       // Fallback AI response
       const fallbackAIResponse = {
         mirror: {
@@ -598,10 +598,10 @@ fastify.get('/safety/status', {
     isLocked: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock,
     reason: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
     message: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
-      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.message
+      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response
       : 'No frontend lock active.',
     resources: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
-      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.resources
+      ? ['Contact support', 'Review safety guidelines']
       : [],
     unlockConditions: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
       ? ['Contact support', 'Review safety guidelines']
@@ -660,8 +660,8 @@ fastify.get('/survey/analytics', {
 }, async (request, reply) => {
   const user = (request as any).user;
   // In a real app, coupleId would be derived from user or passed as query param
-  const analytics = getSurveyAnalytics(user?.coupleId);
-  const insights = getAIInsights(analytics);
+  const analytics = await getSurveyAnalytics();
+  const insights = await getAIInsights();
   reply.send({ ...analytics, insights });
 });
 
@@ -699,7 +699,11 @@ fastify.post('/delete/:requestId/execute', {
   const { requestId } = request.params as { requestId: string };
   // For demo, allow any authenticated user to "execute"
   try {
-    const deleteResult = executeHardDelete(requestId);
+    const deleteResult = await executeHardDelete(
+      { id: requestId, userId: user?.id || '', requestedAt: new Date().toISOString(), reason: 'user_request', status: 'pending' },
+      { userId: user?.id || '', includeSessions: true, includeMessages: true, includeSurveyResponses: true, includeSafetyViolations: true, includeAnalytics: true, includeAuditLogs: true },
+      { users: new Map(), couples: new Map(), sessions: new Map(), messages: new Map(), surveyResponses: new Map(), safetyViolations: new Map(), analytics: new Map(), auditLogs: new Map() }
+    );
     reply.code(200).send(deleteResult);
   } catch (error: any) {
     reply.code(400).send({ error: error instanceof Error ? error.message : "Unknown error" });
@@ -722,7 +726,8 @@ fastify.get('/delete/audit-logs', {
   preHandler: rateLimiters.general
 }, async (request, reply) => {
   // In a real app, this would be an admin-only endpoint
-  reply.send(getAuditLogs());
+  const user = (request as any).user;
+  reply.send(await getAuditLogs(user?.id || 'system'));
 });
 
 // Start server

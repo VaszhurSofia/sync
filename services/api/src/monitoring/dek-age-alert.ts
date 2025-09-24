@@ -38,6 +38,10 @@ export class DEKAgeMonitor {
     const encryption = getEncryption();
     const dekInfo = await encryption.getDEKInfo();
     
+    if (!dekInfo.createdAt) {
+      throw new Error('DEK creation date is not available');
+    }
+    
     const dekAgeDays = Math.floor(
       (Date.now() - dekInfo.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -56,7 +60,7 @@ export class DEKAgeMonitor {
       dekAgeDays,
       thresholdDays: this.thresholdDays,
       isExceeded,
-      lastRotation: dekInfo.createdAt,
+      lastRotation: dekInfo.createdAt!,
       nextRotationDue,
       alertLevel
     };
@@ -185,8 +189,8 @@ export async function registerDEKAgeMonitoring(fastify: FastifyInstance) {
     }
   }, checkInterval);
 
-  fastify.log.info('DEK age monitoring registered', {
+  fastify.log.info({
     thresholdDays: process.env.DEK_AGE_THRESHOLD_DAYS || '90',
     checkIntervalMinutes: process.env.DEK_CHECK_INTERVAL_MINUTES || '60'
-  });
+  }, 'DEK age monitoring registered');
 }

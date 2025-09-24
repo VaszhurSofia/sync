@@ -188,7 +188,7 @@ export class SessionHistoryModel {
     `;
 
     const result = await this.pool.query(query, [historyId, userId]);
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   /**

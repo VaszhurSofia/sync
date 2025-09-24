@@ -138,7 +138,7 @@ async function registerRoutes() {
   // Staging gate
   if (process.env.STAGING === 'true') {
     fastify.addHook('onRequest', async (request, reply) => {
-      const auth = request.headers.get('authorization');
+      const auth = request.headers.authorization;
       const validAuth = `Basic ${Buffer.from(process.env.STAGING_AUTH || 'admin:password').toString('base64')}`;
       
       if (!auth || auth !== validAuth) {
