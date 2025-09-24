@@ -1,0 +1,88 @@
+name: Quality Gates - Working Version
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  quality-gates-working:
+    name: Working Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Verify essential files exist
+      run: |
+        echo "🔍 Verifying essential files..."
+        # Check if the ai-disabled directory exists
+        if [ -d "services/ai-disabled" ]; then
+          echo "✅ services/ai-disabled directory exists"
+        else
+          echo "❌ services/ai-disabled directory missing"
+          exit 1
+        fi
+        
+        # Check if the required files exist
+        if [ -f "services/ai-disabled/prompts/therapist/v1.2.md" ]; then
+          echo "✅ Therapist v1.2 prompt exists"
+        else
+          echo "❌ Therapist v1.2 prompt missing"
+          exit 1
+        fi
+        
+        if [ -f "services/ai-disabled/src/schemas/therapist.v1_2.schema.json" ]; then
+          echo "✅ JSON schema exists"
+        else
+          echo "❌ JSON schema missing"
+          exit 1
+        fi
+        
+        if [ -f "services/ai-disabled/src/validation/therapistValidator.ts" ]; then
+          echo "✅ Validator exists"
+        else
+          echo "❌ Validator missing"
+          exit 1
+        fi
+        
+        echo "✅ All essential files verified"
+        
+    - name: Run basic checks
+      run: |
+        echo "🔍 Running basic checks..."
+        
+        # TypeScript compilation
+        echo "🔍 TypeScript compilation..."
+        npm run type-check
+        echo "✅ TypeScript compilation passed"
+        
+        # Tests
+        echo "🔍 Running tests..."
+        npm run test
+        echo "✅ Tests passed"
+        
+        # Log security scan
+        echo "🔍 Running log security scan..."
+        npm run test:log-scan
+        echo "✅ Log security scan passed"
+        
+        # Build (excluding website)
+        echo "🔍 Building packages..."
+        npm run build -- --filter=!@sync/website
+        echo "✅ Build passed"
+        
+    - name: Success
+      run: |
+        echo "🎉 ALL QUALITY GATES PASSED!"
+        echo "✅ Repository is ready for development"

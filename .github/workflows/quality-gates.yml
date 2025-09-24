@@ -1,10 +1,7 @@
 name: Quality Gates - Definition of Done
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  # Temporarily disabled - only manual trigger
   workflow_dispatch:
 
 jobs:

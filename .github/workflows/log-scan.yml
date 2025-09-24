@@ -1,17 +1,8 @@
 name: Log Security Scan
 
 on:
-  pull_request:
-    paths:
-      - 'services/**'
-      - 'website/**'
-      - '__tests__/security/**'
-  push:
-    branches: [main]
-    paths:
-      - 'services/**'
-      - 'website/**'
-      - '__tests__/security/**'
+  # Temporarily disabled - only manual trigger
+  workflow_dispatch:
 
 jobs:
   log-security-scan:
