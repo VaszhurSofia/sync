@@ -233,6 +233,11 @@ export function themeToCSS(theme: ThemeTokens): Record<string, string> {
 
 // Apply theme to document
 export function applyTheme(themeName: Theme): void {
+  // Only run in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+  
   const theme = getTheme(themeName);
   const cssVars = themeToCSS(theme);
   
@@ -248,6 +253,11 @@ export function applyTheme(themeName: Theme): void {
 
 // Get current theme from document
 export function getCurrentTheme(): Theme {
+  // Only run in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return 'blue';
+  }
+  
   const bodyClasses = document.body.className;
   const themeMatch = bodyClasses.match(/theme-(\w+)/);
   return (themeMatch?.[1] as Theme) || 'blue';

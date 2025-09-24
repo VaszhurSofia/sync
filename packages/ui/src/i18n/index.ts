@@ -129,10 +129,10 @@ export class I18nManager {
   
   private async loadTranslations() {
     // Load English (fallback)
-    this.translations.en = await import('./locales/en.json');
+    this.translations.en = (await import('./locales/en.json')).default;
     
     // Load German
-    this.translations.de = await import('./locales/de.json');
+    this.translations.de = (await import('./locales/de.json')).default;
   }
   
   setLocale(locale: SupportedLocale) {
@@ -152,9 +152,9 @@ export class I18nManager {
         console.warn(`Translation missing for key: ${String(key)}`);
         return String(key);
       }
-      return fallback as string;
+      return String(fallback);
     }
-    return translation as string;
+    return String(translation);
   }
   
   getSupportedLocales(): LocaleConfig[] {
