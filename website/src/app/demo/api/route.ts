@@ -35,15 +35,17 @@ function purgeExpiredData() {
   const now = new Date();
   
   // Purge expired sessions
-  for (const [sessionId, session] of demoSessions.entries()) {
-    if (now.getTime() - session.lastActivity.getTime() > SESSION_TIMEOUT_MS) {
+  for (const sessionId of demoSessions.keys()) {
+    const session = demoSessions.get(sessionId);
+    if (session && now.getTime() - session.lastActivity.getTime() > SESSION_TIMEOUT_MS) {
       demoSessions.delete(sessionId);
     }
   }
   
   // Purge expired users
-  for (const [userId, user] of demoUsers.entries()) {
-    if (now.getTime() - user.createdAt.getTime() > USER_TIMEOUT_MS) {
+  for (const userId of demoUsers.keys()) {
+    const user = demoUsers.get(userId);
+    if (user && now.getTime() - user.createdAt.getTime() > USER_TIMEOUT_MS) {
       demoUsers.delete(userId);
     }
   }

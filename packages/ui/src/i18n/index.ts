@@ -143,14 +143,23 @@ export class I18nManager {
     return this.currentLocale;
   }
   
-  t<K extends keyof TranslationKeys>(key: K): string {
-    const translation = this.translations[this.currentLocale]?.[key];
+  t(key: string): string {
+    const keys = key.split('.');
+    let translation: any = this.translations[this.currentLocale];
+    
+    for (const k of keys) {
+      translation = translation?.[k];
+    }
+    
     if (!translation) {
       // Fallback to English
-      const fallback = this.translations.en?.[key];
+      let fallback: any = this.translations.en;
+      for (const k of keys) {
+        fallback = fallback?.[k];
+      }
       if (!fallback) {
-        console.warn(`Translation missing for key: ${String(key)}`);
-        return String(key);
+        console.warn(`Translation missing for key: ${key}`);
+        return key;
       }
       return String(fallback);
     }

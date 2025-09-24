@@ -3,7 +3,7 @@
  * Runs axe and Lighthouse checks for WCAG AA compliance
  */
 
-import { getTheme, validateThemeAccessibility, Theme } from '@sync/ui/theme';
+import { getTheme, validateThemeAccessibility, Theme } from '@sync/ui';
 
 // Test configuration
 const THEMES: Theme[] = ['blue', 'green'];

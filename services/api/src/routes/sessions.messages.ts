@@ -216,6 +216,8 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
         await boundaryAuditModel.create({
           sessionId,
           userId: user.id,
+          boundaryType: 'safety',
+          triggerReason: 'Content safety violation detected',
           riskLevel: request.safetyContext.boundaryResult.riskLevel as 'low' | 'medium' | 'high',
           concerns: request.safetyContext.boundaryResult.concerns,
           action: 'boundary_lock',
