@@ -22,7 +22,7 @@ interface DeleteSessionResponse {
 }
 
 export async function sessionDeleteRoutes(fastify: FastifyInstance) {
-  const sessionModel = new SessionModel(fastify.pg);
+  const sessionModel = new SessionModel((fastify as any).pg);
 
   // Hard delete session
   fastify.delete<DeleteSessionRequest, DeleteSessionResponse>('/sessions/:id', {
@@ -77,7 +77,7 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
       const coupleQuery = `
         SELECT user_a_id, user_b_id FROM couples WHERE id = $1
       `;
-      const coupleResult = await fastify.pg.query(coupleQuery, [session.coupleId]);
+      const coupleResult = await (fastify as any).pg.query(coupleQuery, [session.coupleId]);
       
       if (coupleResult.rows.length === 0) {
         return reply.code(404).send({
@@ -96,7 +96,7 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
       }
 
       // Start transaction for hard delete
-      const client = await fastify.pg.connect();
+      const client = await (fastify as any).pg.connect();
       
       try {
         await client.query('BEGIN');
@@ -257,9 +257,9 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
       `;
 
       const [messagesResult, feedbackResult, auditResult] = await Promise.all([
-        fastify.pg.query(messagesQuery, [sessionId]),
-        fastify.pg.query(feedbackQuery, [sessionId]),
-        fastify.pg.query(auditQuery, [sessionId])
+        (fastify as any).pg.query(messagesQuery, [sessionId]),
+        (fastify as any).pg.query(feedbackQuery, [sessionId]),
+        (fastify as any).pg.query(auditQuery, [sessionId])
       ]);
 
       const messagesCount = parseInt(messagesResult.rows[0].count);

@@ -117,7 +117,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   // Get current user info
   fastify.get('/auth/me', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Get current user information',
       tags: ['Authentication'],
@@ -166,7 +166,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   // Refresh token
   fastify.post('/auth/refresh', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Refresh the access token',
       tags: ['Authentication'],

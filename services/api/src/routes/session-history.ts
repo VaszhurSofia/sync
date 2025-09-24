@@ -20,7 +20,7 @@ interface DeleteHistoryParams {
 }
 
 export async function sessionHistoryRoutes(fastify: FastifyInstance) {
-  const sessionHistoryModel = new SessionHistoryModel(fastify.pg);
+  const sessionHistoryModel = new SessionHistoryModel((fastify as any).pg);
 
   // Get user's session history (consented entries only)
   fastify.get<{

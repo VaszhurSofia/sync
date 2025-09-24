@@ -72,8 +72,8 @@ export async function boundaryLockMiddleware(
   const { sessionId, userId } = context;
   
   try {
-    const sessionModel = new SessionModel(request.server.pg);
-    const boundaryAuditModel = new BoundaryAuditModel(request.server.pg);
+    const sessionModel = new SessionModel((request.server as any).pg);
+    const boundaryAuditModel = new BoundaryAuditModel((request.server as any).pg);
     
     // Check for boundary lock
     const lockStatus = await checkBoundaryLock(sessionModel, boundaryAuditModel, sessionId);

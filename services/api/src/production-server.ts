@@ -638,21 +638,21 @@ fastify.get('/safety/status', {
   const violations = safetyViolations.get(userId) || 0;
 
   const rateLimit: SafetyRateLimit = {
-    maxRequests: SAFETY_CONFIG.rateLimit.maxRequests,
-    windowMs: SAFETY_CONFIG.rateLimit.windowMs,
-    message: `You can send ${SAFETY_CONFIG.rateLimit.maxRequests} messages per ${SAFETY_CONFIG.rateLimit.windowMs / 1000} seconds.`,
+    maxRequests: SAFETY_CONFIG.rateLimiting.maxRequests,
+    windowMs: SAFETY_CONFIG.rateLimiting.windowMs,
+    message: `You can send ${SAFETY_CONFIG.rateLimiting.maxRequests} messages per ${SAFETY_CONFIG.rateLimiting.windowMs / 1000} seconds.`,
   };
 
   const frontendLock: FrontendLock = {
-    isLocked: violations >= SAFETY_CONFIG.maxViolationsBeforeLock,
-    reason: violations >= SAFETY_CONFIG.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
-    message: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    isLocked: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock,
+    reason: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
+    message: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
       ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.message
       : 'No frontend lock active.',
-    resources: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    resources: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
       ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.resources
       : [],
-    unlockConditions: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    unlockConditions: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
       ? ['Contact support', 'Review safety guidelines']
       : [],
   };

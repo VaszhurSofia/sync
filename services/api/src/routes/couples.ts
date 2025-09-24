@@ -7,7 +7,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 export async function couplesRoutes(fastify: FastifyInstance) {
   // Create a new couple
   fastify.post('/couples', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Create a new couple relationship',
       tags: ['Couples'],
@@ -64,7 +64,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
 
   // Get couple information
   fastify.get('/couples/me', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Get current user\'s couple information',
       tags: ['Couples'],
@@ -145,7 +145,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
 
   // Create an invite
   fastify.post('/invites', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Create an invite for the partner to join the couple',
       tags: ['Invites'],
@@ -223,7 +223,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
 
   // Accept an invite
   fastify.post('/invites/:code/accept', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       description: 'Accept an invite to join a couple',
       tags: ['Invites'],

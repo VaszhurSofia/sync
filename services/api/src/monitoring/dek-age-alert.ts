@@ -150,7 +150,7 @@ export async function registerDEKAgeMonitoring(fastify: FastifyInstance) {
       const status = await monitor.getDEKAgeStatus();
       reply.code(200).send(status);
     } catch (error) {
-      fastify.log.error('Failed to get DEK age status', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'Failed to get DEK age status');
       reply.code(500).send({
         error: 'Internal Server Error',
         message: 'Failed to retrieve DEK age status'
@@ -166,7 +166,7 @@ export async function registerDEKAgeMonitoring(fastify: FastifyInstance) {
         message: 'DEK age alert sent successfully'
       });
     } catch (error) {
-      fastify.log.error('Failed to force DEK age alert', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'Failed to force DEK age alert');
       reply.code(500).send({
         error: 'Internal Server Error',
         message: 'Failed to send DEK age alert'
@@ -181,7 +181,7 @@ export async function registerDEKAgeMonitoring(fastify: FastifyInstance) {
     try {
       await monitor.checkDEKAge();
     } catch (error) {
-      fastify.log.error('DEK age monitoring error', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'DEK age monitoring error');
     }
   }, checkInterval);
 

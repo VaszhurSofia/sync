@@ -24,7 +24,7 @@ export async function metricsRoutes(fastify: FastifyInstance) {
       reply.type('text/plain; version=0.0.4; charset=utf-8');
       return reply.send(metrics);
     } catch (error) {
-      fastify.log.error('Failed to generate metrics', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'Failed to generate metrics');
       return reply.code(500).send('Internal server error');
     }
   });
@@ -57,7 +57,7 @@ export async function metricsRoutes(fastify: FastifyInstance) {
       const metrics = metricsCollector.getMetrics();
       return reply.send(metrics);
     } catch (error) {
-      fastify.log.error('Failed to get metrics', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'Failed to get metrics');
       return reply.code(500).send('Internal server error');
     }
   });
@@ -83,7 +83,7 @@ export async function metricsRoutes(fastify: FastifyInstance) {
         message: 'Metrics reset successfully'
       });
     } catch (error) {
-      fastify.log.error('Failed to reset metrics', error instanceof Error ? error.message : "Unknown error");
+      fastify.log.error({ error: error instanceof Error ? error.message : "Unknown error" }, 'Failed to reset metrics');
       return reply.code(500).send('Internal server error');
     }
   });

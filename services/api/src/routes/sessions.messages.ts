@@ -26,7 +26,7 @@ interface GetMessagesRequest {
 }
 
 export async function sessionMessagesRoutes(fastify: FastifyInstance) {
-  const sessionModel = new SessionModel(fastify.pg);
+  const sessionModel = new SessionModel((fastify as any).pg);
   const encryption = getEncryption();
   const longPollManager = getLongPollManager();
 
@@ -121,7 +121,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       const coupleQuery = `
         SELECT user_a_id, user_b_id FROM couples WHERE id = $1
       `;
-      const coupleResult = await fastify.pg.query(coupleQuery, [session.coupleId]);
+      const coupleResult = await (fastify as any).pg.query(coupleQuery, [session.coupleId]);
       
       if (coupleResult.rows.length === 0) {
         return reply.code(404).send({
@@ -163,7 +163,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
         SELECT id FROM messages 
         WHERE session_id = $1 AND client_message_id = $2
       `;
-      const existingResult = await fastify.pg.query(existingMessageQuery, [sessionId, client_message_id]);
+      const existingResult = await (fastify as any).pg.query(existingMessageQuery, [sessionId, client_message_id]);
       
       if (existingResult.rows.length > 0) {
         return reply.code(202).send({
@@ -198,7 +198,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
         RETURNING id
       `;
       
-      await fastify.pg.query(insertMessageQuery, [
+      await (fastify as any).pg.query(insertMessageQuery, [
         messageId,
         sessionId,
         senderRole,
@@ -210,7 +210,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       // Check if safety violation occurred and create boundary lock
       if (request.safetyContext && !request.safetyContext.isValid) {
         const { BoundaryAuditModel } = await import('../models/boundary-audit');
-        const boundaryAuditModel = new BoundaryAuditModel(fastify.pg);
+        const boundaryAuditModel = new BoundaryAuditModel((fastify as any).pg);
         
         // Create boundary lock
         await boundaryAuditModel.create({
@@ -326,7 +326,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       const coupleQuery = `
         SELECT user_a_id, user_b_id FROM couples WHERE id = $1
       `;
-      const coupleResult = await fastify.pg.query(coupleQuery, [session.coupleId]);
+      const coupleResult = await (fastify as any).pg.query(coupleQuery, [session.coupleId]);
       
       if (coupleResult.rows.length === 0) {
         return reply.code(404).send({ error: 'Couple not found' });
@@ -354,7 +354,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       query += ` ORDER BY created_at ASC`;
 
       // Execute query
-      const result = await fastify.pg.query(query, values);
+      const result = await (fastify as any).pg.query(query, values);
       
       // Decrypt messages
       const messages = await Promise.all(
@@ -456,7 +456,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       const coupleQuery = `
         SELECT user_a_id, user_b_id FROM couples WHERE id = $1
       `;
-      const coupleResult = await fastify.pg.query(coupleQuery, [session.coupleId]);
+      const coupleResult = await (fastify as any).pg.query(coupleQuery, [session.coupleId]);
       
       if (coupleResult.rows.length === 0) {
         return reply.code(404).send({ error: 'Couple not found' });
@@ -523,7 +523,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       const coupleQuery = `
         SELECT user_a_id, user_b_id FROM couples WHERE id = $1
       `;
-      const coupleResult = await fastify.pg.query(coupleQuery, [session.coupleId]);
+      const coupleResult = await (fastify as any).pg.query(coupleQuery, [session.coupleId]);
       
       if (coupleResult.rows.length === 0) {
         return reply.code(404).send({ error: 'Couple not found' });

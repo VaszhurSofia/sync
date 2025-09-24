@@ -595,15 +595,15 @@ fastify.get('/safety/status', {
   };
 
   const frontendLock: FrontendLock = {
-    isLocked: violations >= SAFETY_CONFIG.maxViolationsBeforeLock,
-    reason: violations >= SAFETY_CONFIG.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
-    message: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    isLocked: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock,
+    reason: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
+    message: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
       ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.message
       : 'No frontend lock active.',
-    resources: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    resources: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
       ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.resources
       : [],
-    unlockConditions: violations >= SAFETY_CONFIG.maxViolationsBeforeLock
+    unlockConditions: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
       ? ['Contact support', 'Review safety guidelines']
       : [],
   };

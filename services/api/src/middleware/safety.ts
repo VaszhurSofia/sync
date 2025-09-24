@@ -59,20 +59,26 @@ export async function safetyMiddleware(
   } else if (tier2Result.riskLevel === 'high' && tier2Result.confidence >= 0.7) {
     highestRisk = 'high';
     finalResult = {
-      isSafe: false,
+      detected: true,
+      patterns: tier2Result.categories,
       riskLevel: 'high',
-      action: 'block',
+      isSafe: false,
       message: tier2Result.boundaryTemplate,
-      concerns: tier2Result.categories
+      resources: [],
+      concerns: tier2Result.categories,
+      action: 'block'
     };
   } else if (tier2Result.riskLevel === 'medium' && tier2Result.confidence >= 0.7) {
     highestRisk = 'medium';
     finalResult = {
-      isSafe: false,
+      detected: true,
+      patterns: tier2Result.categories,
       riskLevel: 'medium',
-      action: 'warn',
+      isSafe: false,
       message: tier2Result.boundaryTemplate,
-      concerns: tier2Result.categories
+      resources: [],
+      concerns: tier2Result.categories,
+      action: 'warn'
     };
   }
   
