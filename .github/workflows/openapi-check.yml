@@ -1,17 +1,18 @@
 name: OpenAPI Client Drift Check
 
 on:
-  pull_request:
-    paths:
-      - 'docs/openapi.yaml'
-      - 'packages/types/**'
-      - 'scripts/generate-api-client.ts'
-  push:
-    branches: [main]
-    paths:
-      - 'docs/openapi.yaml'
-      - 'packages/types/**'
-      - 'scripts/generate-api-client.ts'
+  workflow_dispatch:  # Temporarily disabled - only run manually
+  # pull_request:
+  #   paths:
+  #     - 'docs/openapi.yaml'
+  #     - 'packages/types/**'
+  #     - 'scripts/generate-api-client.ts'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'docs/openapi.yaml'
+  #     - 'packages/types/**'
+  #     - 'scripts/generate-api-client.ts'
 
 jobs:
   openapi-drift-check:

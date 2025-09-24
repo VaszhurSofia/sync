@@ -229,6 +229,5 @@ async function main() {
   }
 }
 
-if (require.main === module) {
-  main().catch(console.error);
-}
+// Run main function if this file is executed directly
+main().catch(console.error);
