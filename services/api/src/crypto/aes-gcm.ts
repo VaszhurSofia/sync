@@ -1,4 +1,4 @@
-import { createCipherGCM, createDecipherGCM, randomBytes, scrypt } from 'crypto';
+import { createCipher, createDecipher, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
@@ -90,7 +90,7 @@ export class AESGCMEncryption {
 
     const dek = await this.ensureDEK();
     const nonce = randomBytes(12); // 96-bit nonce for GCM
-    const cipher = createCipherGCM('aes-256-gcm', dek, nonce);
+    const cipher = createCipher('aes-256-gcm', dek, nonce);
 
     let ciphertext = cipher.update(plaintext, 'utf8');
     cipher.final();
@@ -109,7 +109,7 @@ export class AESGCMEncryption {
   async decrypt(ciphertext: Buffer, nonce: Buffer, tag: Buffer): Promise<DecryptionResult> {
     try {
       const dek = await this.ensureDEK();
-      const decipher = createDecipherGCM('aes-256-gcm', dek, nonce);
+      const decipher = createDecipher('aes-256-gcm', dek, nonce);
       decipher.setAuthTag(tag);
 
       let plaintext = decipher.update(ciphertext, undefined, 'utf8');
@@ -171,7 +171,7 @@ export class AESGCMEncryption {
       
       return result.plaintext;
     } catch (error) {
-      throw new Error(`Failed to decrypt data: ${error.message}`);
+      throw new Error(`Failed to decrypt data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
