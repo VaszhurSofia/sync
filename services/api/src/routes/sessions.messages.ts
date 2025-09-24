@@ -4,6 +4,8 @@ import { getEncryption } from '../crypto/aes-gcm';
 import { logger } from '../logger';
 import { getLongPollManager } from '../lib/longpoll';
 import { v4 as uuidv4 } from 'uuid';
+import { safetyMiddleware, SafetyContext } from '../middleware/safety';
+import { boundaryLockMiddleware, BoundaryLockContext } from '../middleware/boundary-lock';
 
 interface SendMessageRequest {
   content: string;
@@ -56,6 +58,20 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
     const user = (request as any).user;
 
     try {
+      // Pre-LLM safety short-circuit
+      const safetyContext: SafetyContext = {
+        userId: user.id,
+        sessionId,
+        messageCount: 0, // Would be fetched from session
+        previousViolations: 0 // Would be fetched from user profile
+      };
+      
+      await safetyMiddleware(request, reply, safetyContext);
+      
+      // If safety middleware sent a response, return early
+      if (reply.sent) {
+        return;
+      }
       // Get session
       const session = await sessionModel.getById(sessionId);
       if (!session) {
@@ -64,6 +80,20 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
           status: 'rejected',
           reason: 'Session not found'
         });
+      }
+
+      // Check boundary lock
+      const boundaryContext: BoundaryLockContext = {
+        sessionId,
+        userId: user.id,
+        userRole: user.id === session.userAId ? 'userA' : 'userB'
+      };
+      
+      await boundaryLockMiddleware(request, reply, boundaryContext);
+      
+      // If boundary lock middleware sent a response, return early
+      if (reply.sent) {
+        return;
       }
 
       // Get couple information
@@ -155,6 +185,39 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
         new Date(),
         client_message_id
       ]);
+
+      // Check if safety violation occurred and create boundary lock
+      if (request.safetyContext && !request.safetyContext.isValid) {
+        const { BoundaryAuditModel } = await import('../models/boundary-audit');
+        const boundaryAuditModel = new BoundaryAuditModel(fastify.pg);
+        
+        // Create boundary lock
+        await boundaryAuditModel.create({
+          sessionId,
+          userId: user.id,
+          riskLevel: request.safetyContext.boundaryResult.riskLevel,
+          concerns: request.safetyContext.boundaryResult.concerns,
+          action: 'boundary_lock',
+          metadata: {
+            messageId,
+            contentLength: content.length,
+            timestamp: new Date().toISOString(),
+            tier1Result: request.safetyContext.boundaryResult.tier1Result,
+            tier2Result: request.safetyContext.boundaryResult.tier2Result
+          }
+        });
+        
+        // Set session boundary flag
+        await sessionModel.setBoundaryFlag(sessionId, true);
+        
+        logger.warn('Boundary lock created due to safety violation', {
+          sessionId,
+          userId: user.id,
+          messageId,
+          riskLevel: request.safetyContext.boundaryResult.riskLevel,
+          concerns: request.safetyContext.boundaryResult.concerns
+        });
+      }
 
       // Advance turn state
       const updatedSession = await sessionModel.advanceTurnAfterMessage(
