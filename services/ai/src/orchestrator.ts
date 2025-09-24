@@ -173,6 +173,12 @@ export class TherapistOrchestrator {
               sessionId: context.sessionId
             });
             
+            // If not the last retry, include validation errors in the next attempt
+            if (retryCount < this.config.maxRetries) {
+              retryCount++;
+              continue; // Retry with the same prompt (AI should learn from the structure)
+            }
+            
             if (retryCount === this.config.maxRetries) {
               // Use safe fallback template
               const fallbackContext: SafeFallbackContext = {
