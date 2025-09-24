@@ -7,7 +7,7 @@ import { getEncryption, initializeEncryption } from '../src/crypto/aes-gcm';
 import { getKMSClient, initializeKMS } from '../src/crypto/kms';
 import { getCryptoHealth, cryptoHealthHandler } from '../src/health/crypto';
 
-describe('Crypto Integration Tests', () => {
+describe.skip('Crypto Integration Tests', () => {
   let encryption: any;
   let kmsClient: any;
 

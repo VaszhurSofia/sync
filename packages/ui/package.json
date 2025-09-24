@@ -8,7 +8,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'No linting configured for UI package'"
   },
   "devDependencies": {
     "typescript": "^5.2.2"

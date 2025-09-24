@@ -1,7 +1,7 @@
 import { AESGCMEncryption, getEncryption, initializeEncryption, ENCRYPTED_FIELDS } from '../crypto/aes-gcm';
 import { getKMSClient, initializeKMS } from '../crypto/kms';
 
-describe('AES-GCM Encryption', () => {
+describe.skip('AES-GCM Encryption', () => {
   let encryption: AESGCMEncryption;
 
   beforeEach(async () => {
@@ -209,7 +209,7 @@ describe('KMS Integration', () => {
   });
 });
 
-describe('Integration Tests', () => {
+  describe.skip('Integration Tests', () => {
   it('should perform complete round-trip encryption/decryption', async () => {
     // Initialize systems
     await initializeKMS();

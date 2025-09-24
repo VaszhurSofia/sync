@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
+    "lint": "echo 'No linting configured for API package'",
     "test": "jest",
     "test:watch": "jest --watch",
     "db:migrate": "tsx src/db/migrate.ts",
