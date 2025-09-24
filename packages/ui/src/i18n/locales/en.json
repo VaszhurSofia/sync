@@ -1,0 +1,71 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "session": {
+    "startSession": "Start Session",
+    "endSession": "End Session",
+    "yourTurn": "Your Turn",
+    "waitingForPartner": "Waiting for Partner",
+    "sessionEnded": "Session Ended",
+    "sessionExpired": "Session Expired",
+    "joinSession": "Join Session",
+    "leaveSession": "Leave Session"
+  },
+  "therapist": {
+    "mirror": "Mirror",
+    "clarify": "Clarify",
+    "explore": "Explore",
+    "microActions": "Micro Actions",
+    "check": "Check",
+    "boundaryMessage": "Boundary Message",
+    "safetyResources": "Safety Resources"
+  },
+  "survey": {
+    "howWasSession": "How was your session?",
+    "notHelpful": "Not Helpful",
+    "neutral": "Neutral",
+    "helpful": "Helpful",
+    "submitFeedback": "Submit Feedback",
+    "thankYou": "Thank you for your feedback!"
+  },
+  "safety": {
+    "boundaryDetected": "Boundary Detected",
+    "safetyResources": "Safety Resources",
+    "emergencyContacts": "Emergency Contacts",
+    "professionalHelp": "Professional Help",
+    "crisisSupport": "Crisis Support"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "dataRetention": "Data Retention",
+    "deleteAccount": "Delete Account"
+  }
+}

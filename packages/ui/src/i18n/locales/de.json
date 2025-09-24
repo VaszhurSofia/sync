@@ -1,0 +1,71 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Info"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "createAccount": "Konto erstellen",
+    "alreadyHaveAccount": "Bereits ein Konto?",
+    "dontHaveAccount": "Noch kein Konto?"
+  },
+  "session": {
+    "startSession": "Sitzung starten",
+    "endSession": "Sitzung beenden",
+    "yourTurn": "Ihr Zug",
+    "waitingForPartner": "Warten auf Partner",
+    "sessionEnded": "Sitzung beendet",
+    "sessionExpired": "Sitzung abgelaufen",
+    "joinSession": "Sitzung beitreten",
+    "leaveSession": "Sitzung verlassen"
+  },
+  "therapist": {
+    "mirror": "Spiegeln",
+    "clarify": "Klären",
+    "explore": "Erkunden",
+    "microActions": "Kleine Schritte",
+    "check": "Prüfen",
+    "boundaryMessage": "Grenzen-Nachricht",
+    "safetyResources": "Sicherheitsressourcen"
+  },
+  "survey": {
+    "howWasSession": "Wie war Ihre Sitzung?",
+    "notHelpful": "Nicht hilfreich",
+    "neutral": "Neutral",
+    "helpful": "Hilfreich",
+    "submitFeedback": "Feedback senden",
+    "thankYou": "Vielen Dank für Ihr Feedback!"
+  },
+  "safety": {
+    "boundaryDetected": "Grenze erkannt",
+    "safetyResources": "Sicherheitsressourcen",
+    "emergencyContacts": "Notfallkontakte",
+    "professionalHelp": "Professionelle Hilfe",
+    "crisisSupport": "Krisenunterstützung"
+  },
+  "settings": {
+    "language": "Sprache",
+    "theme": "Design",
+    "notifications": "Benachrichtigungen",
+    "privacy": "Datenschutz",
+    "dataRetention": "Datenspeicherung",
+    "deleteAccount": "Konto löschen"
+  }
+}
