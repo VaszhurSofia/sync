@@ -14,7 +14,7 @@ A secure, AI-powered chat application designed for couples to communicate with A
 
 ```
 /app-mobile/     # React Native (Expo)
-/site/           # Next.js site + /demo trial chat
+/website/        # Next.js site + /demo trial chat
 /services/api/   # Fastify API + OpenAPI YAML
 /services/ai/    # Orchestrator, prompts, evals
 /packages/ui/    # Shared UI tokens/components
