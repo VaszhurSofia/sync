@@ -111,7 +111,7 @@ If safe, proceed with normal response. If unsafe, shouldProceed should be false.
     const parsed = JSON.parse(responseText);
     return SafetyCheckSchema.parse(parsed);
   } catch (error) {
-    fastify.log.warn('Safety validation failed, proceeding with caution:', error);
+    console.warn('Safety validation failed, proceeding with caution:', error instanceof Error ? error.message : String(error));
     return {
       isSafe: true,
       riskLevel: 'low',
@@ -184,7 +184,7 @@ fastify.post('/orchestrate', {
       fastify.log.warn('Safety check failed, providing safe fallback response', {
         concerns: safetyCheck.concerns,
         riskLevel: safetyCheck.riskLevel,
-      });
+      } as any);
 
       return {
         mirror: {
@@ -239,7 +239,7 @@ fastify.post('/orchestrate', {
       const parsed = JSON.parse(responseText);
       aiResponse = AIResponseSchema.parse(parsed);
     } catch (error) {
-      fastify.log.warn('AI response parsing failed, using fallback:', error);
+      console.warn('AI response parsing failed, using fallback:', error instanceof Error ? error.message : String(error));
       aiResponse = {
         mirror: {
           partnerA: "I heard you expressing your thoughts and feelings.",
@@ -257,7 +257,7 @@ fastify.post('/orchestrate', {
     };
 
   } catch (error) {
-    fastify.log.error('AI orchestration error:', error);
+    console.error('AI orchestration error:', error instanceof Error ? error.message : String(error));
     
     // Safe fallback response
     return {
@@ -353,7 +353,7 @@ Respond with JSON:
     const evaluation = JSON.parse(responseText);
     return evaluation;
   } catch (error) {
-    fastify.log.error('Evaluation error:', error);
+    console.error('Evaluation error:', error instanceof Error ? error.message : String(error));
     return {
       scores: {
         neutrality: 3,

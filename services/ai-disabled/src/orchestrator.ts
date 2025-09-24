@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { logger } from './logger';
-import { TherapistPromptResponseSchema, validateTherapistResponse, parseTherapistResponse } from './schemas/therapist-response';
+// import { TherapistPromptResponseSchema, validateTherapistResponse, parseTherapistResponse } from './schemas/therapist-response';
 import { validateTherapistV12, TherapistV12 } from './validation/therapistValidator';
 import { createSafeFallbackTemplate, createBoundaryTemplate, SafeFallbackContext } from './fallbacks/safeFallback';
 import { telemetryCollector } from './telemetry';
@@ -244,7 +244,7 @@ export class TherapistOrchestrator {
       }
       
       const finalLatency = Date.now() - startTime;
-      const usedFallback = validationResult?.warnings?.some(w => w.includes('fallback')) || false;
+      const usedFallback = validationResult?.warnings?.some((w: string) => w.includes('fallback')) || false;
       
       // Ensure we have a valid response
       if (!jsonResponse) {

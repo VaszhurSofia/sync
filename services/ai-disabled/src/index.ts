@@ -114,7 +114,7 @@ Please provide a reflection following the exact JSON format:
 
     return aiResponse;
   } catch (error) {
-    fastify.log.error('AI orchestration error:', error);
+    console.error('AI orchestration error:', error instanceof Error ? error.message : String(error));
     
     // Safe fallback response
     return {

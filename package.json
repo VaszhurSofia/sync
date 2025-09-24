@@ -6,6 +6,7 @@
     "app-mobile",
     "website",
     "services/api",
+    "services/ai-disabled",
     "packages/ui",
     "packages/types"
   ],

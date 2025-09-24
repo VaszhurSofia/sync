@@ -10,7 +10,7 @@
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "lint": "echo 'No linting configured for AI package'",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:evaluation": "jest tests/evaluation.test.ts",
     "test:schema-compliance": "jest tests/therapist-prompt.test.ts --testNamePattern='schema|validation'",

@@ -1,0 +1,58 @@
+name: Basic CI Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  basic-test:
+    name: Basic CI Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Show environment info
+      run: |
+        echo "🔍 Environment Information:"
+        echo "Node.js version: $(node --version)"
+        echo "npm version: $(npm --version)"
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        
+    - name: Check package.json
+      run: |
+        echo "🔍 Checking package.json..."
+        if [ -f "package.json" ]; then
+          echo "✅ package.json exists"
+          echo "Package name: $(node -p "require('./package.json').name")"
+          echo "Package version: $(node -p "require('./package.json').version")"
+        else
+          echo "❌ package.json not found"
+          exit 1
+        fi
+        
+    - name: Install dependencies
+      run: |
+        echo "🔍 Installing dependencies..."
+        npm ci
+        echo "✅ Dependencies installed successfully"
+        
+    - name: Test basic npm commands
+      run: |
+        echo "🔍 Testing basic npm commands..."
+        echo "Testing npm run type-check..."
+        npm run type-check
+        echo "✅ type-check passed"
+        
+    - name: Success
+      run: |
+        echo "🎉 Basic CI test passed!"
+        echo "✅ CI environment is working correctly"
