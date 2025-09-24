@@ -51,7 +51,7 @@ export class KMSClient {
         keyId: this.keyId,
         keyStatus: 'error',
         lastChecked: new Date().toISOString(),
-        error: error.message
+        error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
       };
     }
   }

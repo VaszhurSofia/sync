@@ -272,7 +272,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
       if (error instanceof Error) {
         reply.code(400).send({ 
           error: 'INVITE_ERROR',
-          message: error.message 
+          message: error instanceof Error ? error.message : "Unknown error" 
         });
         return;
       }

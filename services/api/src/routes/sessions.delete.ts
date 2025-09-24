@@ -165,7 +165,7 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to delete session', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         userId: user.id
       });
@@ -208,7 +208,7 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
       }
     } catch (error) {
       logger.error('Failed to verify session deletion', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId
       });
 
@@ -286,7 +286,7 @@ export async function sessionDeleteRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to get deletion proof', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         userId: user.id
       });

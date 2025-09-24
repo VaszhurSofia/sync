@@ -268,9 +268,9 @@ export async function executeHardDelete(
     }
 
   } catch (error) {
-    result.errors.push(`Delete operation failed: ${error.message}`);
+    result.errors.push(`Delete operation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     deleteRequest.status = 'failed';
-    deleteRequest.errorMessage = error.message;
+    deleteRequest.errorMessage = error instanceof Error ? error.message : "Unknown error";
   }
 
   return result;

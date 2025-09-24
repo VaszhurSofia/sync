@@ -68,7 +68,7 @@ export class SessionModel {
       
       return session;
     } catch (error) {
-      logger.error('Failed to create session', { error: error.message, data });
+      logger.error('Failed to create session', { error: error instanceof Error ? error.message : "Unknown error", data });
       throw error;
     }
   }
@@ -90,7 +90,7 @@ export class SessionModel {
       
       return this.mapRowToSession(result.rows[0]);
     } catch (error) {
-      logger.error('Failed to get session', { error: error.message, sessionId });
+      logger.error('Failed to get session', { error: error instanceof Error ? error.message : "Unknown error", sessionId });
       throw error;
     }
   }
@@ -157,7 +157,7 @@ export class SessionModel {
       
       return session;
     } catch (error) {
-      logger.error('Failed to update session', { error: error.message, sessionId, data });
+      logger.error('Failed to update session', { error: error instanceof Error ? error.message : "Unknown error", sessionId, data });
       throw error;
     }
   }
@@ -199,7 +199,7 @@ export class SessionModel {
       
       return result.rowCount > 0;
     } catch (error) {
-      logger.error('Failed to delete session', { error: error.message, sessionId });
+      logger.error('Failed to delete session', { error: error instanceof Error ? error.message : "Unknown error", sessionId });
       throw error;
     }
   }
@@ -220,7 +220,7 @@ export class SessionModel {
       
       return result.rows.map(row => this.mapRowToSession(row));
     } catch (error) {
-      logger.error('Failed to get sessions by couple', { error: error.message, coupleId });
+      logger.error('Failed to get sessions by couple', { error: error instanceof Error ? error.message : "Unknown error", coupleId });
       throw error;
     }
   }
@@ -356,7 +356,7 @@ export class SessionModel {
       return await encryption.decryptField('sessions.summary_text', session.summaryTextEnc);
     } catch (error) {
       logger.error('Failed to decrypt session summary', { 
-        error: error.message, 
+        error: error instanceof Error ? error.message : "Unknown error", 
         sessionId: session.id 
       });
       return undefined;

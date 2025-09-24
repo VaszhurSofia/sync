@@ -15,7 +15,7 @@ export const logRequest = (method: string, url: string, statusCode: number, dura
 
 export const logError = (error: Error, context?: any) => {
   logger.error('Error occurred', {
-    error: error.message,
+    error: error instanceof Error ? error.message : "Unknown error",
     stack: error.stack,
     context: context ? scrubForLogging(context) : undefined
   });

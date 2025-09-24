@@ -148,7 +148,7 @@ export class LongPollManager extends EventEmitter {
         this.cleanupPoll(sessionId, poll.clientId);
       } catch (error) {
         logger.error('Error delivering message to poll', {
-          error: error.message,
+          error: error instanceof Error ? error.message : "Unknown error",
           sessionId,
           clientId: poll.clientId
         });
@@ -180,7 +180,7 @@ export class LongPollManager extends EventEmitter {
           }
         } catch (error) {
           logger.error('Error sending heartbeat', {
-            error: error.message,
+            error: error instanceof Error ? error.message : "Unknown error",
             sessionId,
             clientId: poll.clientId
           });

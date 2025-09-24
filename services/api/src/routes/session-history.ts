@@ -57,7 +57,7 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error('Failed to get session history', {
         userId,
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       });
       
       reply.code(500).send({
@@ -102,7 +102,7 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error('Failed to get pending consent', {
         userId,
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       });
       
       reply.code(500).send({
@@ -152,7 +152,7 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
       fastify.log.error('Failed to update consent', {
         historyId,
         userId: user.id,
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       });
       
       reply.code(500).send({
@@ -196,7 +196,7 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
       fastify.log.error('Failed to delete history entry', {
         historyId,
         userId: user.id,
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       });
       
       reply.code(500).send({

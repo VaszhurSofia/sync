@@ -54,7 +54,7 @@ export async function checkBoundaryLock(
     return { isLocked: false };
   } catch (error) {
     logger.error('Failed to check boundary lock', {
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
       sessionId
     });
     return { isLocked: false };
@@ -108,7 +108,7 @@ export async function boundaryLockMiddleware(
     
   } catch (error) {
     logger.error('Boundary lock middleware error', {
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
       sessionId,
       userId
     });
@@ -118,7 +118,7 @@ export async function boundaryLockMiddleware(
       isLocked: false,
       sessionId,
       userId,
-      error: error.message
+      error: error instanceof Error ? error.message : "Unknown error"
     };
   }
 }
@@ -162,7 +162,7 @@ export async function createBoundaryLock(
     
   } catch (error) {
     logger.error('Failed to create boundary lock', {
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
       sessionId,
       userId,
       boundaryType
@@ -207,7 +207,7 @@ export async function clearBoundaryLock(
     
   } catch (error) {
     logger.error('Failed to clear boundary lock', {
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
       sessionId,
       userId,
       reason
@@ -253,7 +253,7 @@ export async function getBoundaryLockStatus(
     
   } catch (error) {
     logger.error('Failed to get boundary lock status', {
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
       sessionId
     });
     throw error;

@@ -171,7 +171,7 @@ export class AESGCMEncryption {
       
       return result.plaintext;
     } catch (error) {
-      throw new Error(`Failed to decrypt data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to decrypt data: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   }
 

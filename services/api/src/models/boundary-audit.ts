@@ -69,7 +69,7 @@ export class BoundaryAuditModel {
       return auditEntry;
     } catch (error) {
       logger.error('Failed to create boundary audit entry', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         data
       });
       throw error;
@@ -92,7 +92,7 @@ export class BoundaryAuditModel {
       return result.rows.map(row => this.mapRowToAuditEntry(row));
     } catch (error) {
       logger.error('Failed to get boundary audit entries', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId
       });
       throw error;
@@ -115,7 +115,7 @@ export class BoundaryAuditModel {
       return result.rows.map(row => this.mapRowToAuditEntry(row));
     } catch (error) {
       logger.error('Failed to get boundary audit entries for user', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         userId
       });
       throw error;
@@ -139,7 +139,7 @@ export class BoundaryAuditModel {
       return parseInt(result.rows[0].count) > 0;
     } catch (error) {
       logger.error('Failed to check boundary lock status', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId
       });
       return false;
@@ -200,7 +200,7 @@ export class BoundaryAuditModel {
       return stats;
     } catch (error) {
       logger.error('Failed to get boundary statistics', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         timeframe
       });
       throw error;

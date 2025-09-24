@@ -276,7 +276,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to send message', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         userId: user.id
       });
@@ -392,12 +392,12 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
           // Return the result from long-polling
           return reply.send(longPollResult.messages || []);
         } catch (error) {
-          if (error.message === 'Client aborted long-poll') {
+          if (error instanceof Error ? error.message : "Unknown error" === 'Client aborted long-poll') {
             return reply.code(200).send({ aborted: true });
           }
           
           logger.error('Long-poll error', {
-            error: error.message,
+            error: error instanceof Error ? error.message : "Unknown error",
             sessionId,
             userId: user.id
           });
@@ -410,7 +410,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to get messages', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         userId: user.id
       });
@@ -485,7 +485,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to abort long-poll', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         clientId,
         userId: user.id
@@ -547,7 +547,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       logger.error('Failed to end session', {
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
         sessionId,
         userId: user.id
       });

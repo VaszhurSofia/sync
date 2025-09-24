@@ -699,7 +699,7 @@ fastify.post('/sessions/:id/survey', {
     safeLog('info', 'Survey submitted', { sessionId, userId: user.id, rating });
     reply.code(201).send(surveyResponse);
   } catch (error: any) {
-    reply.code(400).send({ error: error.message });
+    reply.code(400).send({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 });
 
@@ -723,7 +723,7 @@ fastify.post('/delete/request', {
     safeLog('info', 'Delete request created', { userId: user.id, reason });
     reply.code(202).send(deleteRequest);
   } catch (error: any) {
-    reply.code(400).send({ error: error.message });
+    reply.code(400).send({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 });
 
@@ -737,7 +737,7 @@ fastify.post('/delete/:requestId/confirm', {
     safeLog('info', 'Delete request confirmed', { requestId, userId: user.id });
     reply.code(202).send(deleteRequest);
   } catch (error: any) {
-    reply.code(400).send({ error: error.message });
+    reply.code(400).send({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 });
 
@@ -751,7 +751,7 @@ fastify.post('/delete/:requestId/execute', {
     safeLog('info', 'Delete request executed', { requestId, userId: user.id });
     reply.code(200).send(deleteResult);
   } catch (error: any) {
-    reply.code(400).send({ error: error.message });
+    reply.code(400).send({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 });
 

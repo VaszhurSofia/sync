@@ -76,7 +76,7 @@ export async function getCryptoHealth(): Promise<CryptoHealthStatus> {
       selftest: 'failed',
       encryptionMethod: 'Unknown',
       lastChecked: new Date().toISOString(),
-      errors: [`Crypto health check failed: ${error.message}`],
+      errors: [`Crypto health check failed: ${error instanceof Error ? error.message : "Unknown error"}`],
     };
   }
 }
