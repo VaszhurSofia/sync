@@ -195,18 +195,21 @@ export default function DemoPage() {
 
   const structuredDemoMessages = [
     { 
+      id: 'demo-1',
       sender: 'userA' as const, 
       content: 'I feel like we\'re not spending enough quality time together lately. I miss our deep conversations and the way we used to connect.', 
       timestamp: new Date(),
       isStructured: true
     },
     { 
+      id: 'demo-2',
       sender: 'userB' as const, 
       content: 'I understand your concern. Work has been really demanding, but I also miss our connection. I want to find a way to prioritize our relationship more.', 
       timestamp: new Date(),
       isStructured: true
     },
     { 
+      id: 'demo-3',
       sender: 'ai' as const, 
       content: 'I can see both of you are expressing a shared desire for deeper connection and quality time together. This is a beautiful foundation to build upon. Let me reflect on what I\'m hearing and offer some insights:\n\n**What I notice:**\n• Both partners acknowledge the challenge\n• There\'s mutual desire to reconnect\n• Work-life balance is a common theme\n\n**Questions to explore together:**\n• What does "quality time" look like for each of you?\n• What are 2-3 specific activities that make you feel most connected?\n• How can you create small daily moments of connection?', 
       timestamp: new Date(),

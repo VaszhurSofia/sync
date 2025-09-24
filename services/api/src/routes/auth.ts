@@ -45,7 +45,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       
       reply.code(204).send();
     } catch (error) {
-      fastify.log.error('Error requesting verification code:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error requesting verification code');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -110,7 +110,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       
       reply.send({ accessToken: token });
     } catch (error) {
-      fastify.log.error('Error verifying code:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error verifying code');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -159,7 +159,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         role: authRequest.user.role,
       });
     } catch (error) {
-      fastify.log.error('Error getting user info:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error getting user info');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -199,7 +199,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       
       reply.send({ accessToken: token });
     } catch (error) {
-      fastify.log.error('Error refreshing token:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error refreshing token');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });

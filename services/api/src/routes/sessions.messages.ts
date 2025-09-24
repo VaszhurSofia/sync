@@ -216,7 +216,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
         await boundaryAuditModel.create({
           sessionId,
           userId: user.id,
-          riskLevel: request.safetyContext.boundaryResult.riskLevel,
+          riskLevel: request.safetyContext.boundaryResult.riskLevel as 'low' | 'medium' | 'high',
           concerns: request.safetyContext.boundaryResult.concerns,
           action: 'boundary_lock',
           metadata: {
@@ -358,7 +358,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
       
       // Decrypt messages
       const messages = await Promise.all(
-        result.rows.map(async (row) => {
+        result.rows.map(async (row: any) => {
           const decryptedContent = await encryption.decryptField('messages.content', row.content_enc);
           return {
             id: row.id,
@@ -392,7 +392,7 @@ export async function sessionMessagesRoutes(fastify: FastifyInstance) {
           // Return the result from long-polling
           return reply.send(longPollResult.messages || []);
         } catch (error) {
-          if (error instanceof Error ? error.message : "Unknown error" === 'Client aborted long-poll') {
+          if (error instanceof Error && error.message === 'Client aborted long-poll') {
             return reply.code(200).send({ aborted: true });
           }
           

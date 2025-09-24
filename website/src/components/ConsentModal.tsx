@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { i18n } from '@sync/ui/i18n';
+import { i18n } from '@sync/ui';
 
 interface ConsentModalProps {
   isOpen: boolean;

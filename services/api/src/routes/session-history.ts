@@ -55,10 +55,10 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
         count: history.length
       });
     } catch (error) {
-      fastify.log.error('Failed to get session history', {
+      fastify.log.error({
         userId,
         error: error instanceof Error ? error.message : "Unknown error"
-      });
+      }, 'Failed to get session history');
       
       reply.code(500).send({
         error: 'Internal Server Error',
@@ -100,10 +100,10 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
         count: pending.length
       });
     } catch (error) {
-      fastify.log.error('Failed to get pending consent', {
+      fastify.log.error({
         userId,
         error: error instanceof Error ? error.message : "Unknown error"
-      });
+      }, 'Failed to get pending consent');
       
       reply.code(500).send({
         error: 'Internal Server Error',
@@ -149,11 +149,11 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
         history: updated
       });
     } catch (error) {
-      fastify.log.error('Failed to update consent', {
+      fastify.log.error({
         historyId,
         userId: user.id,
         error: error instanceof Error ? error.message : "Unknown error"
-      });
+      }, 'Failed to update consent');
       
       reply.code(500).send({
         error: 'Internal Server Error',
@@ -193,11 +193,11 @@ export async function sessionHistoryRoutes(fastify: FastifyInstance) {
         message: 'History entry deleted successfully'
       });
     } catch (error) {
-      fastify.log.error('Failed to delete history entry', {
+      fastify.log.error({
         historyId,
         userId: user.id,
         error: error instanceof Error ? error.message : "Unknown error"
-      });
+      }, 'Failed to delete history entry');
       
       reply.code(500).send({
         error: 'Internal Server Error',

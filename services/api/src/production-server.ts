@@ -139,7 +139,7 @@ fastify.post('/auth/verify-code', {
       displayNameEnc: encrypt(displayName)
     };
     users.set(email, user);
-    initializeDeleteData(user.id, `couple_${user.id}`, `session_${user.id}`);
+    await initializeDeleteData();
   }
 
   const token = `token_${user.id}_${Date.now()}`;
@@ -467,7 +467,7 @@ fastify.post('/sessions/:id/messages', {
       }
 
     } catch (aiError) {
-      logger.error('Error calling AI service', { error: aiError.message });
+      logger.error('Error calling AI service', { error: aiError instanceof Error ? aiError.message : 'Unknown error' });
       
       const fallbackAIResponse = {
         mirror: {
@@ -644,15 +644,15 @@ fastify.get('/safety/status', {
   };
 
   const frontendLock: FrontendLock = {
-    isLocked: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock,
-    reason: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
-    message: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
-      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.message
+    isLocked: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock,
+    reason: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock ? 'Too many safety violations' : 'normal',
+    message: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
+      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response
       : 'No frontend lock active.',
-    resources: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
-      ? SAFETY_CONFIG.safetyTemplates.frontend_lock.response.resources
+    resources: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
+      ? ['Contact support', 'Review safety guidelines']
       : [],
-    unlockConditions: violations >= SAFETY_CONFIG.rateLimitinging.maxViolationsBeforeLock
+    unlockConditions: violations >= SAFETY_CONFIG.rateLimiting.maxViolationsBeforeLock
       ? ['Contact support', 'Review safety guidelines']
       : [],
   };
@@ -707,8 +707,8 @@ fastify.get('/survey/analytics', {
   preHandler: rateLimiters.general
 }, async (request, reply) => {
   const user = (request as any).user;
-  const analytics = getSurveyAnalytics(user?.coupleId);
-  const insights = getAIInsights(analytics);
+  const analytics = await getSurveyAnalytics();
+  const insights = await getAIInsights();
   reply.send({ ...analytics, insights });
 });
 
@@ -747,7 +747,11 @@ fastify.post('/delete/:requestId/execute', {
   const user = (request as any).user;
   const { requestId } = request.params as { requestId: string };
   try {
-    const deleteResult = executeHardDelete(requestId);
+    const deleteResult = await executeHardDelete(
+      { id: requestId, userId: user?.id || '', requestedAt: new Date().toISOString(), reason: 'user_request', status: 'pending' },
+      { userId: user?.id || '', includeSessions: true, includeMessages: true, includeSurveyResponses: true, includeSafetyViolations: true, includeAnalytics: true, includeAuditLogs: true },
+      { users: new Map(), couples: new Map(), sessions: new Map(), messages: new Map(), surveyResponses: new Map(), safetyViolations: new Map(), analytics: new Map(), auditLogs: new Map() }
+    );
     safeLog('info', 'Delete request executed', { requestId, userId: user.id });
     reply.code(200).send(deleteResult);
   } catch (error: any) {
@@ -770,7 +774,8 @@ fastify.get('/delete/:requestId/status', {
 fastify.get('/delete/audit-logs', {
   preHandler: rateLimiters.general
 }, async (request, reply) => {
-  reply.send(getAuditLogs());
+  const user = (request as any).user;
+  reply.send(await getAuditLogs(user?.id || 'system'));
 });
 
 // Start server
@@ -816,7 +821,7 @@ async function start() {
     console.log(`🧪 Ready for production testing!`);
     
   } catch (err) {
-    logger.error('Failed to start server', { error: err.message });
+    logger.error('Failed to start server', { error: err instanceof Error ? err.message : 'Unknown error' });
     process.exit(1);
   }
 }

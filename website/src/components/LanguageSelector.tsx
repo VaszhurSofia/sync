@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { i18n, SupportedLocale, SUPPORTED_LOCALES } from '@sync/ui/i18n';
+import { i18n, SupportedLocale, SUPPORTED_LOCALES } from '@sync/ui';
 
 interface LanguageSelectorProps {
   className?: string;
@@ -71,7 +71,7 @@ export default function LanguageSelector({
           className="absolute right-0 z-10 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg"
           role="listbox"
         >
-          {Object.entries(SUPPORTED_LOCALES).map(([code, config]) => (
+          {Object.entries(SUPPORTED_LOCALES).map(([code, config]: [string, any]) => (
             <button
               key={code}
               onClick={() => handleLocaleChange(code as SupportedLocale)}

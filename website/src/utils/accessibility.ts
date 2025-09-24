@@ -47,7 +47,7 @@ export class AccessibilityManager {
       navigator.userAgent.includes('NVDA') ||
       navigator.userAgent.includes('JAWS') ||
       navigator.userAgent.includes('VoiceOver') ||
-      window.speechSynthesis ||
+      !!window.speechSynthesis ||
       document.querySelector('[aria-live]') !== null;
     
     return hasScreenReader;

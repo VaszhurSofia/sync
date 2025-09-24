@@ -57,7 +57,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
       
       reply.code(201).send({ coupleId: couple.id });
     } catch (error) {
-      fastify.log.error('Error creating couple:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error creating couple');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -138,7 +138,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
         members: membersWithDisplayNames,
       });
     } catch (error) {
-      fastify.log.error('Error getting couple info:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error getting couple info');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -216,7 +216,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
         expiresAt: expiresAt.toISOString(),
       });
     } catch (error) {
-      fastify.log.error('Error creating invite:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error creating invite');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -277,7 +277,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
         return;
       }
       
-      fastify.log.error('Error accepting invite:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error accepting invite');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -328,7 +328,7 @@ export async function couplesRoutes(fastify: FastifyInstance) {
         isValid,
       });
     } catch (error) {
-      fastify.log.error('Error getting invite info:', error);
+      fastify.log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Error getting invite info');
       reply.code(500).send({ error: 'Internal server error' });
     }
   });

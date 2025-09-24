@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAccessibilityConfig, updateAccessibilityConfig, AccessibilityConfig } from '../utils/accessibility';
-import { i18n } from '@sync/ui/i18n';
+import { i18n } from '@sync/ui';
 
 export default function AccessibilitySettings() {
   const [config, setConfig] = useState<AccessibilityConfig>(getAccessibilityConfig());

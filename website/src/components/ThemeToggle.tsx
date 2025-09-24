@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Palette, Check } from 'lucide-react';
-import { Theme, getTheme, applyTheme, getCurrentTheme, toggleTheme, validateThemeAccessibility } from '@sync/ui/theme';
+import { Theme, getTheme, applyTheme, getCurrentTheme, toggleTheme, validateThemeAccessibility } from '@sync/ui';
 
 interface ThemeToggleProps {
   className?: string;

@@ -94,7 +94,7 @@ class ApiClient {
     };
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+      (headers as any).Authorization = `Bearer ${this.token}`;
     }
 
     try {
