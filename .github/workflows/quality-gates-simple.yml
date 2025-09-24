@@ -1,0 +1,49 @@
+name: Quality Gates - Simple Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-simple:
+    name: Simple Quality Gate Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Test 1 - Check directory structure
+      run: |
+        echo "🔍 Current directory: $(pwd)"
+        echo "🔍 Directory contents:"
+        ls -la
+        echo "🔍 Services directory:"
+        ls -la services/ || echo "Services directory not found"
+        
+    - name: Test 2 - Check specific files
+      run: |
+        echo "🔍 Checking for Therapist v1.2 prompt..."
+        ls -la services/ai-disabled/prompts/therapist/v1.2.md || echo "File not found"
+        echo "🔍 Checking for JSON schema..."
+        ls -la services/ai-disabled/src/schemas/therapist.v1_2.schema.json || echo "File not found"
+        
+    - name: Test 3 - Run npm commands
+      run: |
+        echo "🔍 Testing npm run type-check..."
+        npm run type-check
+        echo "✅ Type check passed"
+        
+    - name: Test 4 - Run log scan
+      run: |
+        echo "🔍 Testing npm run test:log-scan..."
+        npm run test:log-scan
+        echo "✅ Log scan passed"

@@ -1,0 +1,44 @@
+name: Quality Gates - Minimal
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  quality-gates-minimal:
+    name: Minimal Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Essential File Checks
+      run: |
+        echo "🔍 Checking essential files..."
+        test -f "services/ai-disabled/prompts/therapist/v1.2.md" || (echo "❌ Therapist v1.2 prompt missing" && exit 1)
+        test -f "services/ai-disabled/src/schemas/therapist.v1_2.schema.json" || (echo "❌ JSON schema missing" && exit 1)
+        test -f "services/ai-disabled/src/validation/therapistValidator.ts" || (echo "❌ Validator missing" && exit 1)
+        echo "✅ All essential files exist"
+        
+    - name: TypeScript Check
+      run: npm run type-check
+      
+    - name: Tests
+      run: npm run test
+      
+    - name: Build
+      run: npm run build -- --filter=!@sync/website
+      
+    - name: Success
+      run: echo "🎉 All minimal quality gates passed!"
