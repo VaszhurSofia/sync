@@ -254,7 +254,7 @@ export function generateLogScanReport(result: LogScanResult): string {
 }
 
 // Run the scan if this file is executed directly
-if (require.main === module) {
+if (process.argv[1] && process.argv[1].endsWith('log-scan.test.ts')) {
   const result = runLogScan();
   const report = generateLogScanReport(result);
   

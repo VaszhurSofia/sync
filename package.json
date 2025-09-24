@@ -21,11 +21,12 @@
     "db:seed": "cd services/api && npm run db:seed",
     "generate-client": "ts-node scripts/generate-api-client.ts generate",
     "check-drift": "ts-node scripts/generate-api-client.ts check-drift",
-    "test:log-scan": "ts-node __tests__/security/log-scan.test.ts"
+    "test:log-scan": "ts-node __tests__/security/log-scan-simple.test.ts"
   },
   "devDependencies": {
-    "turbo": "^1.10.12",
     "@types/node": "^20.8.0",
+    "ts-node": "^10.9.2",
+    "turbo": "^1.10.12",
     "typescript": "^5.2.2"
   },
   "engines": {
