@@ -73,3 +73,4 @@ See `/docs/` for detailed documentation including:
 - Database schema
 - Security guidelines
 - Deployment procedures
+- [Master Prompt](docs/MASTER_PROMPT.md) - Development guidelines and milestone requirements
