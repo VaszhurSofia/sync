@@ -1,0 +1,19 @@
+{
+  "totalSurveys": 100,
+  "ratingDistribution": {
+    "angry": 36,
+    "neutral": 30,
+    "happy": 34
+  },
+  "correlations": {
+    "ratingVsLatency": -0.037665249222521964,
+    "ratingVsValidation": 0.14443603356710627,
+    "ratingVsSentences": -0.24868249599812733
+  },
+  "insights": [
+    "More negative ratings than positive - may indicate quality issues"
+  ],
+  "recommendations": [
+    "Consider improving AI response quality to reduce negative ratings"
+  ]
+}

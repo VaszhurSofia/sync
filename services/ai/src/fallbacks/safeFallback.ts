@@ -48,8 +48,8 @@ function createBoundarySafeFallback(context: SafeFallbackContext): TherapistV12 
     ],
     check: "Did I respond appropriately to both of your needs?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }
@@ -68,8 +68,8 @@ function createEarlyConversationFallback(context: SafeFallbackContext): Therapis
     ],
     check: "Did I capture both of your perspectives fairly?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }
@@ -88,8 +88,8 @@ function createStructuredFallback(context: SafeFallbackContext): TherapistV12 {
     ],
     check: "Did I understand both of your concerns accurately?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }
@@ -108,8 +108,8 @@ function createDefaultSafeFallback(context: SafeFallbackContext): TherapistV12 {
     ],
     check: "Did I capture both of your perspectives fairly?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }
@@ -129,8 +129,8 @@ export function createEmergencyFallback(): TherapistV12 {
     ],
     check: "Did I respond appropriately to both of your needs?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }
@@ -150,8 +150,8 @@ export function createBoundaryTemplate(): TherapistV12 {
     ],
     check: "Did I respond appropriately to both of your needs?",
     meta: {
-      total_sentences: 8,
-      version: "therapist_v1.2"
+      total_sentences: 7,
+      version: "couple_v2.0"
     }
   };
 }

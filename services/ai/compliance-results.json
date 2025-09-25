@@ -1,0 +1,13 @@
+{
+  "totalTests": 20,
+  "passedTests": 18,
+  "failedTests": 2,
+  "complianceRate": 0.9,
+  "threshold": 0.85,
+  "passed": true,
+  "details": {
+    "schemaCompliance": 0.9,
+    "validationSuccess": 0.9,
+    "errorRate": 0.1
+  }
+}

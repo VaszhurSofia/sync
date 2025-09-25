@@ -167,7 +167,7 @@ export function createSafeFallbackCouple(): TherapistCoupleV20 {
     ],
     check: "Did I capture both of your perspectives fairly?",
     meta: {
-      total_sentences: 8,
+      total_sentences: 7,
       version: "couple_v2.0"
     }
   };
@@ -199,14 +199,14 @@ export function createBoundaryTemplateCouple(): TherapistCoupleV20 {
       partnerB: "I can see this is really challenging for you both."
     },
     clarify: "This conversation has touched on some serious concerns that need professional support.",
-    explore: "Would you be open to connecting with a qualified therapist or counselor?",
+    explore: "What kind of professional support would feel most helpful to you right now?",
     micro_actions: [
       "You might consider reaching out to a mental health professional who can provide appropriate support.",
       "You could try contacting a crisis helpline if you need immediate assistance."
     ],
     check: "Did I respond appropriately to both of your needs?",
     meta: {
-      total_sentences: 8,
+      total_sentences: 7,
       version: "couple_v2.0"
     }
   };

@@ -116,7 +116,8 @@ export class EvaluationHarness {
         context: {
           userAMessage: 'I feel like you never listen to me.',
           userBMessage: 'I do listen, but you never give me a chance to respond.',
-          sessionId: 'basic-1'
+          sessionId: 'basic-1',
+          mode: 'couple' as const
         },
         expectedOutcomes: {
           shouldBeNeutral: true,
