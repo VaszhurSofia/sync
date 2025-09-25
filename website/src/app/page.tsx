@@ -142,7 +142,7 @@ export default function HomePage() {
                 Testimonials
               </Link>
               <Link 
-                href="/demo" 
+                href="/session" 
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   accentColor === 'blue' 
                     ? 'bg-blue-primary hover:bg-blue-secondary text-white' 
@@ -207,7 +207,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <Link 
-                href="/demo"
+                href="/session"
                 className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all shadow-lg hover:shadow-xl ${
                   accentColor === 'blue' 
                     ? 'bg-blue-primary hover:bg-blue-secondary text-white' 
@@ -381,7 +381,7 @@ export default function HomePage() {
             Join thousands of couples who are already using Sync to communicate better.
           </p>
           <Link 
-            href="/demo"
+            href="/session"
             className="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
           >
             Start Your Free Demo
@@ -409,7 +409,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-neutral-400">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/demo" className="hover:text-white transition-colors">Demo</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors">Demo</Link></li>
               </ul>
             </div>
             
