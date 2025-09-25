@@ -2,7 +2,18 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { logger } from './logger';
 // import { TherapistPromptResponseSchema, validateTherapistResponse, parseTherapistResponse } from './schemas/therapist-response';
-import { validateTherapistV12, TherapistV12 } from './validation/therapistValidator';
+import { 
+  validateTherapistV12, 
+  validateTherapistCoupleV20, 
+  validateTherapistSoloV10,
+  TherapistV12, 
+  TherapistCoupleV20, 
+  TherapistSoloV10,
+  createSafeFallbackCouple,
+  createSafeFallbackSolo,
+  createBoundaryTemplateCouple,
+  createBoundaryTemplateSolo
+} from './validation/therapistValidator';
 import { createSafeFallbackTemplate, createBoundaryTemplate, SafeFallbackContext } from './fallbacks/safeFallback';
 import { telemetryCollector } from './telemetry';
 
@@ -18,6 +29,7 @@ export interface ConversationContext {
   userAMessage: string;
   userBMessage: string;
   sessionId: string;
+  mode: 'couple' | 'solo';
   previousMessages?: Array<{
     sender: 'userA' | 'userB';
     content: string;
@@ -32,9 +44,10 @@ export interface ConversationContext {
 export interface OrchestratorResponse {
   success: boolean;
   response?: string;
-  jsonResponse?: TherapistV12;
+  jsonResponse?: TherapistV12 | TherapistCoupleV20 | TherapistSoloV10;
   error?: string;
   promptVersion: string;
+  mode: 'couple' | 'solo';
   validationResult?: {
     isValid: boolean;
     errors: string[];
@@ -55,9 +68,11 @@ export class TherapistOrchestrator {
   }
 
   /**
-   * Load therapist prompt from file
+   * Load therapist prompt from file based on mode
    */
-  private loadTherapistPrompt(version: string): string {
+  private loadTherapistPrompt(mode: 'couple' | 'solo'): string {
+    const version = mode === 'couple' ? 'couple_v2.0' : 'solo_v1.0';
+    
     if (this.promptCache.has(version)) {
       return this.promptCache.get(version)!;
     }
@@ -69,6 +84,7 @@ export class TherapistOrchestrator {
       
       logger.info('Therapist prompt loaded', {
         version,
+        mode,
         promptLength: prompt.length
       });
       
@@ -76,6 +92,7 @@ export class TherapistOrchestrator {
     } catch (error) {
       logger.error('Failed to load therapist prompt', {
         version,
+        mode,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw new Error(`Failed to load therapist prompt version ${version}`);
@@ -83,26 +100,29 @@ export class TherapistOrchestrator {
   }
 
   /**
-   * Generate therapist response with v1.2 JSON validation
+   * Generate therapist response with mode-based routing
    */
   async generateResponse(context: ConversationContext): Promise<OrchestratorResponse> {
     const startTime = Date.now();
     let retryCount = 0;
     
     try {
-      // Load the appropriate prompt version
-      const systemPrompt = this.loadTherapistPrompt(this.config.therapistPromptVersion);
+      // Load the appropriate prompt based on mode
+      const systemPrompt = this.loadTherapistPrompt(context.mode);
+      const promptVersion = context.mode === 'couple' ? 'couple_v2.0' : 'solo_v1.0';
       
       // Check for safety boundary - return boundary template immediately
       if (context.safetyContext?.hasBoundary) {
-        const boundaryTemplate = createBoundaryTemplate();
+        const boundaryTemplate = context.mode === 'couple' 
+          ? createBoundaryTemplateCouple() 
+          : createBoundaryTemplateSolo();
         const boundaryLatency = Date.now() - startTime;
         
         // Record telemetry for boundary usage
         telemetryCollector.recordEvent({
           sessionId: context.sessionId,
           userId: 'unknown', // Would be provided in real implementation
-          promptVersion: this.config.therapistPromptVersion,
+          promptVersion,
           validatorPassed: true,
           totalSentences: boundaryTemplate.meta.total_sentences,
           latency: boundaryLatency,
@@ -116,6 +136,7 @@ export class TherapistOrchestrator {
         
         logger.info('Using boundary template due to safety concerns', {
           sessionId: context.sessionId,
+          mode: context.mode,
           hasBoundary: context.safetyContext.hasBoundary,
           latency: boundaryLatency
         });
@@ -123,8 +144,9 @@ export class TherapistOrchestrator {
         return {
           success: true,
           jsonResponse: boundaryTemplate,
-          response: this.formatResponseForDisplay(boundaryTemplate),
-          promptVersion: this.config.therapistPromptVersion,
+          response: this.formatResponseForDisplay(boundaryTemplate, context.mode),
+          promptVersion,
+          mode: context.mode,
           validationResult: {
             isValid: true,
             errors: [],
@@ -140,7 +162,7 @@ export class TherapistOrchestrator {
       const conversationHistory = this.buildConversationHistory(context);
       
       // Generate response with retries
-      let jsonResponse: TherapistV12 | null = null;
+      let jsonResponse: TherapistCoupleV20 | TherapistSoloV10 | null = null;
       let validationResult: any = null;
       let lastError: Error | null = null;
       
@@ -148,8 +170,10 @@ export class TherapistOrchestrator {
         try {
           const rawResponse = await this.callOpenAIForJson(systemPrompt, conversationHistory);
           
-          // Validate JSON response
-          const validation = validateTherapistV12(rawResponse);
+          // Validate JSON response based on mode
+          const validation = context.mode === 'couple' 
+            ? validateTherapistCoupleV20(rawResponse)
+            : validateTherapistSoloV10(rawResponse);
           
           if (validation.ok) {
             jsonResponse = validation.value;
@@ -161,6 +185,7 @@ export class TherapistOrchestrator {
             
             logger.info('Response generated and validated successfully', {
               sessionId: context.sessionId,
+              mode: context.mode,
               retryCount,
               totalSentences: jsonResponse.meta.total_sentences,
               version: jsonResponse.meta.version
@@ -170,7 +195,8 @@ export class TherapistOrchestrator {
             logger.warn('Response validation failed', {
               errors: validation.ok ? [] : (validation as any).errors,
               retryCount,
-              sessionId: context.sessionId
+              sessionId: context.sessionId,
+              mode: context.mode
             });
             
             // If not the last retry, include validation errors in the next attempt
@@ -180,17 +206,10 @@ export class TherapistOrchestrator {
             }
             
             if (retryCount === this.config.maxRetries) {
-              // Use safe fallback template
-              const fallbackContext: SafeFallbackContext = {
-                sessionId: context.sessionId,
-                userId: 'unknown', // Would be provided in real implementation
-                partnerId: 'unknown',
-                messageCount: context.previousMessages?.length || 0,
-                hasBoundaryFlag: context.safetyContext?.hasBoundary || false,
-                lastMessageContent: context.userBMessage
-              };
-              
-              jsonResponse = createSafeFallbackTemplate(fallbackContext);
+              // Use safe fallback template based on mode
+              jsonResponse = context.mode === 'couple' 
+                ? createSafeFallbackCouple()
+                : createSafeFallbackSolo();
               validationResult = {
                 isValid: true,
                 errors: [],
@@ -199,6 +218,7 @@ export class TherapistOrchestrator {
               
               logger.warn('Using safe fallback template', {
                 sessionId: context.sessionId,
+                mode: context.mode,
                 retryCount,
                 originalErrors: validation.ok ? [] : (validation as any).errors
               });
@@ -210,21 +230,15 @@ export class TherapistOrchestrator {
           logger.error('OpenAI API call failed', {
             error: error instanceof Error ? error.message : 'Unknown error',
             retryCount,
-            sessionId: context.sessionId
+            sessionId: context.sessionId,
+            mode: context.mode
           });
           
           if (retryCount === this.config.maxRetries) {
             // Use safe fallback template on final failure
-            const fallbackContext: SafeFallbackContext = {
-              sessionId: context.sessionId,
-              userId: 'unknown',
-              partnerId: 'unknown',
-              messageCount: context.previousMessages?.length || 0,
-              hasBoundaryFlag: context.safetyContext?.hasBoundary || false,
-              lastMessageContent: context.userBMessage
-            };
-            
-            jsonResponse = createSafeFallbackTemplate(fallbackContext);
+            jsonResponse = context.mode === 'couple' 
+              ? createSafeFallbackCouple()
+              : createSafeFallbackSolo();
             validationResult = {
               isValid: true,
               errors: [],
@@ -233,6 +247,7 @@ export class TherapistOrchestrator {
             
             logger.warn('Using safe fallback template due to API failure', {
               sessionId: context.sessionId,
+              mode: context.mode,
               retryCount,
               lastError: lastError.message
             });
@@ -255,7 +270,7 @@ export class TherapistOrchestrator {
       telemetryCollector.recordEvent({
         sessionId: context.sessionId,
         userId: 'unknown', // Would be provided in real implementation
-        promptVersion: this.config.therapistPromptVersion,
+        promptVersion,
         validatorPassed: validationResult?.isValid || false,
         totalSentences: jsonResponse.meta.total_sentences,
         latency: finalLatency,
@@ -270,7 +285,8 @@ export class TherapistOrchestrator {
       
       logger.info('Therapist response generated', {
         sessionId: context.sessionId,
-        promptVersion: this.config.therapistPromptVersion,
+        mode: context.mode,
+        promptVersion,
         retryCount,
         latency: finalLatency,
         totalSentences: jsonResponse.meta.total_sentences,
@@ -281,8 +297,9 @@ export class TherapistOrchestrator {
       return {
         success: true,
         jsonResponse,
-        response: this.formatResponseForDisplay(jsonResponse),
-        promptVersion: this.config.therapistPromptVersion,
+        response: this.formatResponseForDisplay(jsonResponse, context.mode),
+        promptVersion,
+        mode: context.mode,
         validationResult,
         retryCount,
         latency: finalLatency,
@@ -293,6 +310,7 @@ export class TherapistOrchestrator {
       logger.error('Therapist orchestrator failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
         sessionId: context.sessionId,
+        mode: context.mode,
         retryCount,
         latency: Date.now() - startTime
       });
@@ -300,7 +318,8 @@ export class TherapistOrchestrator {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        promptVersion: this.config.therapistPromptVersion,
+        promptVersion: context.mode === 'couple' ? 'couple_v2.0' : 'solo_v1.0',
+        mode: context.mode,
         retryCount,
         latency: Date.now() - startTime
       };
@@ -371,36 +390,67 @@ export class TherapistOrchestrator {
   }
 
   /**
-   * Format JSON response for display
+   * Format JSON response for display based on mode
    */
-  private formatResponseForDisplay(jsonResponse: TherapistV12): string {
+  private formatResponseForDisplay(jsonResponse: TherapistV12 | TherapistCoupleV20 | TherapistSoloV10, mode: 'couple' | 'solo'): string {
     let formatted = '';
     
-    // MIRROR section
-    formatted += '**MIRROR**\n';
-    formatted += `- Partner A: ${jsonResponse.mirror.partnerA}\n`;
-    formatted += `- Partner B: ${jsonResponse.mirror.partnerB}\n\n`;
-    
-    // CLARIFY section
-    formatted += '**CLARIFY**\n';
-    formatted += `${jsonResponse.clarify}\n\n`;
-    
-    // EXPLORE section
-    formatted += '**EXPLORE**\n';
-    formatted += `${jsonResponse.explore}\n\n`;
-    
-    // MICRO-ACTIONS section
-    if (jsonResponse.micro_actions.length > 0) {
-      formatted += '**MICRO-ACTIONS**\n';
-      jsonResponse.micro_actions.forEach(action => {
-        formatted += `- ${action}\n`;
-      });
-      formatted += '\n';
+    if (mode === 'couple') {
+      const coupleResponse = jsonResponse as TherapistCoupleV20;
+      
+      // MIRROR section
+      formatted += '**MIRROR**\n';
+      formatted += `- Partner A: ${coupleResponse.mirror.partnerA}\n`;
+      formatted += `- Partner B: ${coupleResponse.mirror.partnerB}\n\n`;
+      
+      // CLARIFY section
+      formatted += '**CLARIFY**\n';
+      formatted += `${coupleResponse.clarify}\n\n`;
+      
+      // EXPLORE section
+      formatted += '**EXPLORE**\n';
+      formatted += `${coupleResponse.explore}\n\n`;
+      
+      // MICRO-ACTIONS section
+      if (coupleResponse.micro_actions.length > 0) {
+        formatted += '**MICRO-ACTIONS**\n';
+        coupleResponse.micro_actions.forEach(action => {
+          formatted += `- ${action}\n`;
+        });
+        formatted += '\n';
+      }
+      
+      // CHECK section
+      formatted += '**CHECK**\n';
+      formatted += `${coupleResponse.check}\n`;
+    } else {
+      const soloResponse = jsonResponse as TherapistSoloV10;
+      
+      // REFLECT section
+      formatted += '**REFLECT**\n';
+      formatted += `${soloResponse.reflect}\n\n`;
+      
+      // REFRAME section
+      formatted += '**REFRAME**\n';
+      formatted += `${soloResponse.reframe}\n\n`;
+      
+      // OPTIONS section
+      if (soloResponse.options.length > 0) {
+        formatted += '**OPTIONS**\n';
+        soloResponse.options.forEach(option => {
+          formatted += `- ${option}\n`;
+        });
+        formatted += '\n';
+      }
+      
+      // STARTER section
+      formatted += '**STARTER**\n';
+      formatted += `${soloResponse.starter}\n\n`;
+      
+      // CHECK section
+      formatted += '**CHECK**\n';
+      formatted += `${soloResponse.check}\n`;
     }
-    
-    // CHECK section
-    formatted += '**CHECK**\n';
-    formatted += `${jsonResponse.check}\n`;
     
     return formatted;
   }
@@ -409,7 +459,7 @@ export class TherapistOrchestrator {
    * Get available prompt versions
    */
   getAvailableVersions(): string[] {
-    return ['v1', 'v2', 'v1.2'];
+    return ['couple_v2.0', 'solo_v1.0'];
   }
 
   /**
@@ -438,7 +488,7 @@ let orchestratorInstance: TherapistOrchestrator | null = null;
 export function getTherapistOrchestrator(): TherapistOrchestrator {
   if (!orchestratorInstance) {
     const config: OrchestratorConfig = {
-      therapistPromptVersion: process.env.THERAPIST_PROMPT_VERSION || 'v1',
+      therapistPromptVersion: process.env.THERAPIST_PROMPT_VERSION || 'couple_v2.0',
       openaiApiKey: process.env.OPENAI_API_KEY || '',
       model: process.env.OPENAI_MODEL || 'gpt-4',
       maxRetries: parseInt(process.env.OPENAI_MAX_RETRIES || '2'),
@@ -468,7 +518,7 @@ Would you like to try one of these approaches together?`
 
 export function initializeTherapistOrchestrator(config?: Partial<OrchestratorConfig>): void {
   const defaultConfig: OrchestratorConfig = {
-    therapistPromptVersion: process.env.THERAPIST_PROMPT_VERSION || 'v1',
+    therapistPromptVersion: process.env.THERAPIST_PROMPT_VERSION || 'couple_v2.0',
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     model: process.env.OPENAI_MODEL || 'gpt-4',
     maxRetries: parseInt(process.env.OPENAI_MAX_RETRIES || '2'),

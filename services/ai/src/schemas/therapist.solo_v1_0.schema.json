@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Solo Facilitator Response Schema v1.0",
+  "description": "Schema for solo facilitator responses with strict validation rules",
+  "properties": {
+    "reflect": {
+      "type": "string",
+      "description": "1-2 short sentences: what you might be feeling/valuing (neutral tone)",
+      "minLength": 10,
+      "maxLength": 200
+    },
+    "reframe": {
+      "type": "string",
+      "description": "1 short sentence offering a kinder, testable interpretation",
+      "minLength": 10,
+      "maxLength": 150
+    },
+    "options": {
+      "type": "array",
+      "description": "Small, actionable steps they can take",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 150
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "starter": {
+      "type": "string",
+      "description": "One gentle, open-ended sentence you can say to your partner (not a demand)",
+      "minLength": 10,
+      "maxLength": 150
+    },
+    "check": {
+      "type": "string",
+      "description": "One short question inviting consent to try a step",
+      "minLength": 10,
+      "maxLength": 150
+    },
+    "meta": {
+      "type": "object",
+      "description": "Metadata about the response",
+      "properties": {
+        "total_sentences": {
+          "type": "integer",
+          "description": "Total sentence count across all fields",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "version": {
+          "type": "string",
+          "description": "Schema version identifier",
+          "enum": ["solo_v1.0"]
+        }
+      },
+      "required": ["total_sentences", "version"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["reflect", "reframe", "options", "starter", "check", "meta"],
+  "additionalProperties": false
+}

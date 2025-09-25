@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Couple Facilitator Response Schema v2.0",
+  "description": "Schema for couple facilitator responses with strict validation rules",
+  "properties": {
+    "mirror": {
+      "type": "object",
+      "description": "Reflection of what each partner expressed",
+      "properties": {
+        "partnerA": {
+          "type": "string",
+          "description": "Brief reflection of what Partner A expressed",
+          "minLength": 2,
+          "maxLength": 220
+        },
+        "partnerB": {
+          "type": "string",
+          "description": "Brief reflection of what Partner B expressed",
+          "minLength": 2,
+          "maxLength": 220
+        }
+      },
+      "required": ["partnerA", "partnerB"],
+      "additionalProperties": false
+    },
+    "clarify": {
+      "type": "string",
+      "description": "1-2 short sentences naming the theme or core issue",
+      "minLength": 10,
+      "maxLength": 200
+    },
+    "explore": {
+      "type": "string",
+      "description": "Open-ended question inviting mutual curiosity",
+      "minLength": 10,
+      "maxLength": 150
+    },
+    "micro_actions": {
+      "type": "array",
+      "description": "Small, actionable steps they can take",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 150
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "check": {
+      "type": "string",
+      "description": "Question verifying fairness for both partners",
+      "minLength": 10,
+      "maxLength": 150
+    },
+    "meta": {
+      "type": "object",
+      "description": "Metadata about the response",
+      "properties": {
+        "total_sentences": {
+          "type": "integer",
+          "description": "Total sentence count across all fields",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "version": {
+          "type": "string",
+          "description": "Schema version identifier",
+          "enum": ["couple_v2.0"]
+        }
+      },
+      "required": ["total_sentences", "version"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["mirror", "clarify", "explore", "micro_actions", "check", "meta"],
+  "additionalProperties": false
+}

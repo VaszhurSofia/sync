@@ -84,7 +84,7 @@ jobs:
           name: build-artifacts
           path: |
             services/api/dist/
-            services/ai-disabled/dist/
+            services/ai/dist/
             packages/types/dist/
             packages/ui/dist/
 
