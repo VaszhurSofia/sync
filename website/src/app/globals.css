@@ -200,21 +200,21 @@ select:focus {
     @apply bg-gradient-to-r from-blue-primary to-green-primary bg-clip-text text-transparent font-bold;
   }
   
-  /* Text hierarchy components */
+  /* Text hierarchy components - Enhanced for better readability */
   .text-heading {
     @apply text-neutral-900 font-bold leading-tight;
   }
   
   .text-body {
-    @apply text-neutral-700 leading-relaxed;
+    @apply text-neutral-800 leading-relaxed font-medium;
   }
   
   .text-muted {
-    @apply text-neutral-600 leading-relaxed;
+    @apply text-neutral-700 leading-relaxed;
   }
   
   .text-small {
-    @apply text-neutral-500 text-sm leading-relaxed;
+    @apply text-neutral-600 text-sm leading-relaxed;
   }
   
   /* Enhanced focus states */

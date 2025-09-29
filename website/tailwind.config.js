@@ -32,12 +32,12 @@ module.exports = {
         'neutral-100': '#F5F5F5',       // Light gray
         'neutral-200': '#E5E5E5',      // Border gray
         'neutral-300': '#D4D4D4',      // Light gray
-        'neutral-400': '#A3A3A3',      // Medium gray
-        'neutral-500': '#737373',      // Text gray
-        'neutral-600': '#525252',      // Dark gray text
-        'neutral-700': '#404040',      // Darker text
-        'neutral-800': '#262626',      // Very dark text
-        'neutral-900': '#171717',      // Darkest text
+        'neutral-400': '#9CA3AF',      // Medium gray (improved contrast)
+        'neutral-500': '#6B7280',      // Text gray (improved contrast)
+        'neutral-600': '#4B5563',      // Dark gray text (improved contrast)
+        'neutral-700': '#374151',      // Darker text (improved contrast)
+        'neutral-800': '#1F2937',      // Very dark text (improved contrast)
+        'neutral-900': '#111827',      // Darkest text (improved contrast)
         
         // Additional semantic colors
         'text-primary': '#1F2937',     // Primary text color

@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   description: 'Transform your relationship with AI-powered reflection, clarification, and micro-actions. Built with privacy and safety at its core.',
   keywords: ['couple communication', 'AI relationship', 'privacy', 'safety', 'relationship therapy'],
   authors: [{ name: 'Sync Team' }],
-  viewport: 'width=device-width, initial-scale=1',
   robots: process.env.STAGING === 'true' ? 'noindex,nofollow' : 'index, follow',
   openGraph: {
     title: 'Sync - AI-Powered Couple Communication',
@@ -23,6 +22,11 @@ export const metadata: Metadata = {
     title: 'Sync - AI-Powered Couple Communication',
     description: 'Transform your relationship with AI-powered reflection, clarification, and micro-actions.',
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
