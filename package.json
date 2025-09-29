@@ -76,8 +76,8 @@
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "artillery": "^2.0.0",
     "codecov": "^3.8.0",
     "eslint": "^8.0.0",
