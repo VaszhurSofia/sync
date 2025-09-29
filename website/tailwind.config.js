@@ -9,31 +9,44 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Blue accent variant
-        'blue-primary': '#3B82F6',
-        'blue-secondary': '#1E40AF',
-        'blue-accent': '#60A5FA',
-        'blue-light': '#DBEAFE',
-        'blue-dark': '#1E3A8A',
+        // Blue accent variant - improved contrast
+        'blue-primary': '#2563EB',      // More vibrant blue
+        'blue-secondary': '#1D4ED8',    // Darker blue for better contrast
+        'blue-accent': '#3B82F6',       // Lighter blue for accents
+        'blue-light': '#EFF6FF',        // Very light blue background
+        'blue-dark': '#1E40AF',         // Dark blue for text
+        'blue-50': '#F0F9FF',           // Lightest blue
+        'blue-100': '#E0F2FE',          // Light blue
         
-        // Green accent variant
-        'green-primary': '#10B981',
-        'green-secondary': '#047857',
-        'green-accent': '#34D399',
-        'green-light': '#D1FAE5',
-        'green-dark': '#064E3B',
+        // Green accent variant - improved contrast
+        'green-primary': '#059669',     // More vibrant green
+        'green-secondary': '#047857',   // Darker green for better contrast
+        'green-accent': '#10B981',      // Lighter green for accents
+        'green-light': '#ECFDF5',       // Very light green background
+        'green-dark': '#064E3B',        // Dark green for text
+        'green-50': '#F0FDF4',          // Lightest green
+        'green-100': '#DCFCE7',         // Light green
         
-        // Neutral colors
-        'neutral-50': '#FAFAFA',
-        'neutral-100': '#F5F5F5',
-        'neutral-200': '#E5E5E5',
-        'neutral-300': '#D4D4D4',
-        'neutral-400': '#A3A3A3',
-        'neutral-500': '#737373',
-        'neutral-600': '#525252',
-        'neutral-700': '#404040',
-        'neutral-800': '#262626',
-        'neutral-900': '#171717',
+        // Enhanced neutral colors for better readability
+        'neutral-50': '#FAFAFA',        // Pure white background
+        'neutral-100': '#F5F5F5',       // Light gray
+        'neutral-200': '#E5E5E5',      // Border gray
+        'neutral-300': '#D4D4D4',      // Light gray
+        'neutral-400': '#A3A3A3',      // Medium gray
+        'neutral-500': '#737373',      // Text gray
+        'neutral-600': '#525252',      // Dark gray text
+        'neutral-700': '#404040',      // Darker text
+        'neutral-800': '#262626',      // Very dark text
+        'neutral-900': '#171717',      // Darkest text
+        
+        // Additional semantic colors
+        'text-primary': '#1F2937',     // Primary text color
+        'text-secondary': '#6B7280',   // Secondary text color
+        'text-muted': '#9CA3AF',       // Muted text color
+        'background': '#FFFFFF',       // Main background
+        'background-secondary': '#F9FAFB', // Secondary background
+        'border': '#E5E7EB',           // Border color
+        'border-light': '#F3F4F6',     // Light border
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

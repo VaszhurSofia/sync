@@ -180,7 +180,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <motion.h1 
-              className="text-5xl md:text-7xl font-bold text-neutral-900 mb-6"
+              className="text-5xl md:text-7xl font-bold text-neutral-900 mb-6 leading-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
@@ -194,7 +194,7 @@ export default function HomePage() {
             </motion.h1>
             
             <motion.p 
-              className="text-xl text-neutral-600 mb-8 max-w-3xl mx-auto"
+              className="text-xl text-neutral-700 mb-8 max-w-3xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -234,10 +234,10 @@ export default function HomePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-green-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4 leading-tight">
               Choose Your Communication Style
             </h2>
-            <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
+            <p className="text-xl text-neutral-700 max-w-3xl mx-auto leading-relaxed">
               Two powerful modes designed for different communication needs
             </p>
           </div>
@@ -253,10 +253,10 @@ export default function HomePage() {
               <div className="inline-flex p-4 rounded-full bg-blue-light mb-6">
                 <Users className="h-8 w-8 text-blue-primary" />
               </div>
-              <h3 className="text-2xl font-bold text-neutral-900 mb-4">
+              <h3 className="text-2xl font-bold text-neutral-900 mb-4 leading-tight">
                 Talk Together
               </h3>
-              <p className="text-neutral-600 mb-6">
+              <p className="text-neutral-700 mb-6 leading-relaxed">
                 Perfect for couples who want to communicate and grow together. 
                 AI facilitates turn-taking and provides insights to deepen your connection.
               </p>
@@ -289,10 +289,10 @@ export default function HomePage() {
               <div className="inline-flex p-4 rounded-full bg-green-light mb-6">
                 <Brain className="h-8 w-8 text-green-primary" />
               </div>
-              <h3 className="text-2xl font-bold text-neutral-900 mb-4">
+              <h3 className="text-2xl font-bold text-neutral-900 mb-4 leading-tight">
                 Reflect Alone
               </h3>
-              <p className="text-neutral-600 mb-6">
+              <p className="text-neutral-700 mb-6 leading-relaxed">
                 Ideal for personal reflection and self-discovery. 
                 AI provides gentle guidance and insights to help you understand yourself better.
               </p>
@@ -322,10 +322,10 @@ export default function HomePage() {
       <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4 leading-tight">
               Advanced Features
             </h2>
-            <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
+            <p className="text-xl text-neutral-700 max-w-3xl mx-auto leading-relaxed">
               Built with privacy, safety, and AI at its core. Experience the future of communication.
             </p>
           </div>
@@ -346,10 +346,10 @@ export default function HomePage() {
                     feature.color === 'blue' ? 'text-blue-primary' : 'text-green-primary'
                   }`} />
                 </div>
-                <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+                <h3 className="text-xl font-semibold text-neutral-900 mb-2 leading-tight">
                   {feature.title}
                 </h3>
-                <p className="text-neutral-600">
+                <p className="text-neutral-700 leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>
@@ -362,10 +362,10 @@ export default function HomePage() {
       <section id="testimonials" className="py-16 px-4 sm:px-6 lg:px-8 bg-neutral-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4 leading-tight">
               Loved by Couples Worldwide
             </h2>
-            <p className="text-xl text-neutral-600">
+            <p className="text-xl text-neutral-700 leading-relaxed">
               See what couples are saying about Sync
             </p>
           </div>
@@ -384,10 +384,10 @@ export default function HomePage() {
                     <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
-                <p className="text-neutral-600 mb-4 italic">
+                <p className="text-neutral-700 mb-4 italic leading-relaxed">
                   "{testimonial.text}"
                 </p>
-                <p className="font-semibold text-neutral-900">
+                <p className="font-semibold text-neutral-900 leading-tight">
                   {testimonial.name}
                 </p>
               </motion.div>
@@ -400,10 +400,10 @@ export default function HomePage() {
       <section id="pricing" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4 leading-tight">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-neutral-600">
+            <p className="text-xl text-neutral-700 leading-relaxed">
               Choose the plan that's right for your relationship
             </p>
           </div>
@@ -426,14 +426,14 @@ export default function HomePage() {
                 )}
                 
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">
+                  <h3 className="text-2xl font-bold text-neutral-900 mb-2 leading-tight">
                     {plan.name}
                   </h3>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold text-neutral-900">
                       {plan.price}
                     </span>
-                    <span className="text-neutral-600 ml-1">
+                    <span className="text-neutral-700 ml-1">
                       {plan.period}
                     </span>
                   </div>
@@ -445,7 +445,7 @@ export default function HomePage() {
                       <CheckCircle className={`h-5 w-5 mr-3 ${
                         plan.color === 'blue' ? 'text-blue-primary' : 'text-green-primary'
                       }`} />
-                      <span className="text-neutral-600">{feature}</span>
+                      <span className="text-neutral-700 leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -466,10 +466,10 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-green-600">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
             Ready to Transform Your Communication?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Choose between "Talk Together" or "Reflect Alone" modes. Join thousands of users who are already 
             using Sync to communicate better and grow together.
           </p>
@@ -501,43 +501,43 @@ export default function HomePage() {
                 <Heart className="h-6 w-6 text-blue-primary" />
                 <span className="text-xl font-bold">Sync</span>
               </div>
-              <p className="text-neutral-400">
+              <p className="text-neutral-500 leading-relaxed">
                 AI-powered communication with two modes: "Talk Together" for couples and "Reflect Alone" for solo reflection.
               </p>
             </div>
             
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/session" className="hover:text-white transition-colors">Try Demo</Link></li>
-                <li><Link href="/session" className="hover:text-white transition-colors">Couple Mode</Link></li>
-                <li><Link href="/session" className="hover:text-white transition-colors">Solo Mode</Link></li>
+              <ul className="space-y-2 text-neutral-500">
+                <li><Link href="#features" className="hover:text-white transition-colors leading-relaxed">Features</Link></li>
+                <li><Link href="#pricing" className="hover:text-white transition-colors leading-relaxed">Pricing</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors leading-relaxed">Try Demo</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors leading-relaxed">Couple Mode</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors leading-relaxed">Solo Mode</Link></li>
               </ul>
             </div>
             
             <div>
               <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="#" className="hover:text-white transition-colors">About</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Terms</Link></li>
+              <ul className="space-y-2 text-neutral-500">
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">About</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">Privacy</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">Terms</Link></li>
               </ul>
             </div>
             
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-neutral-400">
-                <li><Link href="#" className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Status</Link></li>
+              <ul className="space-y-2 text-neutral-500">
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">Help Center</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">Contact</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors leading-relaxed">Status</Link></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
-            <p>&copy; 2024 Sync. All rights reserved. Built with privacy and safety at its core.</p>
+          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-500">
+            <p className="leading-relaxed">&copy; 2024 Sync. All rights reserved. Built with privacy and safety at its core.</p>
           </div>
         </div>
       </footer>

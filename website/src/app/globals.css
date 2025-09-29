@@ -169,23 +169,27 @@ select:focus {
 /* Custom components */
 @layer components {
   .btn-primary {
-    @apply bg-blue-primary hover:bg-blue-secondary text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+    @apply bg-blue-primary hover:bg-blue-secondary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-blue-primary focus:ring-offset-2;
   }
   
   .btn-secondary {
-    @apply bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-medium px-6 py-3 rounded-lg transition-all duration-200 border border-neutral-300;
+    @apply bg-white hover:bg-neutral-50 text-neutral-800 font-semibold px-6 py-3 rounded-lg transition-all duration-200 border-2 border-neutral-300 hover:border-neutral-400 focus:ring-2 focus:ring-blue-primary focus:ring-offset-2;
   }
   
   .btn-green {
-    @apply bg-green-primary hover:bg-green-secondary text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+    @apply bg-green-primary hover:bg-green-secondary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-green-primary focus:ring-offset-2;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-lg border border-neutral-200 p-6 transition-all duration-200 hover:shadow-xl;
+    @apply bg-white rounded-xl shadow-lg border border-neutral-200 p-6 transition-all duration-200 hover:shadow-xl hover:border-neutral-300;
+  }
+  
+  .card-hover {
+    @apply card hover:scale-105 hover:shadow-2xl;
   }
   
   .input {
-    @apply w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-primary focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-3 border-2 border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-primary focus:border-blue-primary transition-all duration-200 bg-white text-neutral-900 placeholder-neutral-500;
   }
   
   .gradient-bg {
@@ -193,7 +197,42 @@ select:focus {
   }
   
   .text-gradient {
-    @apply bg-gradient-to-r from-blue-primary to-green-primary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-blue-primary to-green-primary bg-clip-text text-transparent font-bold;
+  }
+  
+  /* Text hierarchy components */
+  .text-heading {
+    @apply text-neutral-900 font-bold leading-tight;
+  }
+  
+  .text-body {
+    @apply text-neutral-700 leading-relaxed;
+  }
+  
+  .text-muted {
+    @apply text-neutral-600 leading-relaxed;
+  }
+  
+  .text-small {
+    @apply text-neutral-500 text-sm leading-relaxed;
+  }
+  
+  /* Enhanced focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-primary focus:ring-offset-2;
+  }
+  
+  /* Improved contrast for better readability */
+  .text-high-contrast {
+    @apply text-neutral-900;
+  }
+  
+  .text-medium-contrast {
+    @apply text-neutral-700;
+  }
+  
+  .text-low-contrast {
+    @apply text-neutral-600;
   }
 }
 
