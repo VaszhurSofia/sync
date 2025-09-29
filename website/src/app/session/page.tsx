@@ -1,313 +1,379 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import SessionModeSelector from '../../components/SessionModeSelector';
-import MessageComposer from '../../components/MessageComposer';
-import EmptyStates from '../../components/EmptyStates';
-import SoloToCoupleConverter from '../../components/SoloToCoupleConverter';
-import SafetyPrivacyGuard from '../../components/SafetyPrivacyGuard';
+import { SessionModeSelector } from '@/components/SessionModeSelector';
+import { MessageComposer } from '@/components/MessageComposer';
+import { SoloToCoupleConverter } from '@/components/SoloToCoupleConverter';
+import { EmptyStates, MessageNudge, TurnIndicator } from '@/components/EmptyStates';
+import { SafetyPrivacyGuard, SafetyLevelIndicator } from '@/components/SafetyPrivacyGuard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  MessageCircle, 
+  MessageSquare, 
   Users, 
   User, 
-  Settings, 
-  Shield,
-  ArrowLeft,
-  MoreVertical
+  ArrowRight, 
+  Shield, 
+  Lock,
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 
 interface Message {
   id: string;
   sender: 'userA' | 'userB' | 'ai';
   content: string;
-  timestamp: Date;
-  safetyTags?: string[];
-  isStructured?: boolean;
+  created_at: string;
+  safety_tags: string[];
+  safety_level?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface Session {
   id: string;
   mode: 'couple' | 'solo';
-  coupleId?: string;
-  ownerUserId?: string;
-  shareToken?: string;
-  startedAt: Date;
-  endedAt?: Date;
-  boundaryFlag: boolean;
+  turn_state: 'awaitingA' | 'awaitingB' | 'ai_reflect' | 'boundary';
+  safety_level: 'low' | 'medium' | 'high' | 'critical';
+  boundary_flag: boolean;
+}
+
+interface PrivacySettings {
+  dataRetention: number;
+  encryptionLevel: 'standard' | 'enhanced' | 'military';
+  auditLogging: boolean;
+  gdprCompliance: boolean;
+  dataAnonymization: boolean;
 }
 
 export default function SessionPage() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState<'mode-select' | 'session' | 'convert'>('mode-select');
-  const [selectedMode, setSelectedMode] = useState<'couple' | 'solo' | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [hasCouple, setHasCouple] = useState(true);
-  const [showConverter, setShowConverter] = useState(false);
-  const [safetyViolations, setSafetyViolations] = useState<any[]>([]);
-  const [boundaryDetected, setBoundaryDetected] = useState(false);
-  const [sessionLocked, setSessionLocked] = useState(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messageCount, setMessageCount] = useState(0);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
+    dataRetention: 30,
+    encryptionLevel: 'enhanced',
+    auditLogging: true,
+    gdprCompliance: true,
+    dataAnonymization: true
+  });
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Handle mode selection
-  const handleModeSelect = async (mode: 'couple' | 'solo') => {
-    setSelectedMode(mode);
+  // Mock API functions (in production, these would be real API calls)
+  const createSession = async (mode: 'couple' | 'solo', coupleId?: string) => {
     setIsLoading(true);
-    
     try {
-      // Create session
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ mode })
-      });
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (response.ok) {
-        const data = await response.json();
-        const newSession: Session = {
-          id: data.sessionId,
-          mode,
-          coupleId: data.coupleId,
-          ownerUserId: data.ownerUserId,
-          shareToken: data.shareToken,
-          startedAt: new Date(),
-          boundaryFlag: false
-        };
-        
-        setSession(newSession);
-        setCurrentStep('session');
-      } else {
-        console.error('Failed to create session');
-      }
-    } catch (error) {
-      console.error('Error creating session:', error);
+      const newSession: Session = {
+        id: `session_${Date.now()}`,
+        mode,
+        turn_state: mode === 'couple' ? 'awaitingA' : 'ai_reflect',
+        safety_level: 'low',
+        boundary_flag: false
+      };
+      
+      setSession(newSession);
+      setCurrentStep('session');
+      setMessages([]);
+      setMessageCount(0);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle message sending
-  const handleSendMessage = async (content: string) => {
-    if (!session || sessionLocked) return;
+  const sendMessage = async (content: string) => {
+    if (!session) return;
     
     setIsLoading(true);
-    
     try {
-      const response = await fetch(`/api/sessions/${session.id}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          content,
-          sender: session.mode === 'solo' ? 'userA' : 'userA' // Simplified for demo
-        })
-      });
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Add user message
-        const userMessage: Message = {
-          id: data.messageId,
-          sender: 'userA',
-          content,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, userMessage]);
-        
-        // Add AI response if available
-        if (data.aiResponse) {
+      const newMessage: Message = {
+        id: `msg_${Date.now()}`,
+        sender: session.mode === 'couple' ? 'userA' : 'userA',
+        content,
+        created_at: new Date().toISOString(),
+        safety_tags: [],
+        safety_level: 'low'
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setMessageCount(prev => prev + 1);
+      
+      // Simulate AI response
+      if (session.mode === 'solo' || session.turn_state === 'awaitingB') {
+        setTimeout(() => {
           const aiMessage: Message = {
-            id: data.aiMessageId,
+            id: `msg_${Date.now() + 1}`,
             sender: 'ai',
-            content: data.aiResponse,
-            timestamp: new Date(),
-            isStructured: true
+            content: session.mode === 'couple' 
+              ? 'I hear both of your perspectives. Let me help you explore this together...'
+              : 'I understand your feelings. Let me help you reflect on this...',
+            created_at: new Date().toISOString(),
+            safety_tags: [],
+            safety_level: 'low'
           };
           
           setMessages(prev => [...prev, aiMessage]);
-        }
+          setMessageCount(prev => prev + 1);
+        }, 2000);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle solo to couple conversion
-  const handleConvertToCouple = () => {
-    setShowConverter(true);
+  const convertSoloToCouple = async (redactedSummary: string, consent: boolean) => {
+    if (!session || !consent) return;
+    
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newSession: Session = {
+        id: `session_${Date.now()}`,
+        mode: 'couple',
+        turn_state: 'awaitingA',
+        safety_level: 'low',
+        boundary_flag: false
+      };
+      
+      setSession(newSession);
+      setMessages([{
+        id: `msg_${Date.now()}`,
+        sender: 'ai',
+        content: `Here is a summary of your solo reflection: "${redactedSummary}"`,
+        created_at: new Date().toISOString(),
+        safety_tags: [],
+        safety_level: 'low'
+      }]);
+      setMessageCount(1);
+      setCurrentStep('session');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleConversionComplete = async (redactedSummary: string) => {
-    setShowConverter(false);
-    // Implementation for conversion would go here
-    console.log('Converting to couple session with summary:', redactedSummary);
+  const updatePrivacySettings = (settings: Partial<PrivacySettings>) => {
+    setPrivacySettings(prev => ({ ...prev, ...settings }));
   };
 
-  // Handle safety violations
-  const handleSafetyViolation = (violation: any) => {
-    setSafetyViolations(prev => [...prev, violation]);
+  const handleDataExport = async () => {
+    // Simulate data export
+    console.log('Exporting user data...');
   };
 
-  const handleBoundaryDetected = () => {
-    setBoundaryDetected(true);
+  const handleDataDelete = async () => {
+    // Simulate data deletion
+    console.log('Deleting user data...');
+    setSession(null);
+    setMessages([]);
+    setMessageCount(0);
+    setCurrentStep('mode-select');
   };
 
-  const handleSessionLock = () => {
-    setSessionLocked(true);
+  const handleRefresh = () => {
+    // Simulate refresh
+    console.log('Refreshing session...');
   };
 
-  // Render mode selector
+  // Check for existing session in URL params
+  useEffect(() => {
+    const sessionId = searchParams.get('sessionId');
+    if (sessionId) {
+      // Load existing session
+      setCurrentStep('session');
+    }
+  }, [searchParams]);
+
   if (currentStep === 'mode-select') {
     return (
-      <SessionModeSelector
-        onModeSelect={handleModeSelect}
-        isAuthenticated={isAuthenticated}
-        hasCouple={hasCouple}
+      <SessionModeSelector 
+        onModeSelect={createSession}
+        isLoading={isLoading}
       />
     );
   }
 
-  // Render session
-  if (currentStep === 'session' && session) {
+  if (currentStep === 'convert') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setCurrentStep('mode-select')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </button>
-              
-              <div className="flex items-center space-x-3">
-                {session.mode === 'couple' ? (
-                  <Users className="w-6 h-6 text-blue-600" />
-                ) : (
-                  <User className="w-6 h-6 text-green-600" />
-                )}
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">
-                    {session.mode === 'couple' ? 'Couple Session' : 'Solo Session'}
-                  </h1>
-                  <p className="text-sm text-gray-500">
-                    {session.mode === 'couple' 
-                      ? 'Neutral facilitation for both partners' 
-                      : 'Private reflection space'
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="p-2 text-gray-600 hover:text-gray-800">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-600 hover:text-gray-800">
-                <MoreVertical className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+      <SoloToCoupleConverter
+        soloSummary="I've been reflecting on our communication patterns and I think we need to work on listening to each other better."
+        onConvert={convertSoloToCouple}
+        onCancel={() => setCurrentStep('session')}
+        isLoading={isLoading}
+      />
+    );
+  }
 
-        {/* Safety & Privacy Guard */}
-        <div className="px-6 py-4">
-          <SafetyPrivacyGuard
-            mode={session.mode}
-            messageContent={messages[messages.length - 1]?.content || ''}
-            onSafetyViolation={handleSafetyViolation}
-            onBoundaryDetected={handleBoundaryDetected}
-            onSessionLock={handleSessionLock}
-          />
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Session Not Found</h2>
+          <Button onClick={() => setCurrentStep('mode-select')}>
+            Start New Session
+          </Button>
         </div>
-
-        {/* Messages */}
-        <div className="flex-1 px-6 py-4 max-h-[60vh] overflow-y-auto">
-          {messages.length === 0 ? (
-            <EmptyStates
-              mode={session.mode}
-              messageCount={messages.length}
-              isWaitingForPartner={session.mode === 'couple' && messages.length === 0}
-              onStartConversation={() => {}}
-              onConvertToCouple={session.mode === 'solo' ? handleConvertToCouple : undefined}
-            />
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${
-                    message.sender === 'ai' ? 'justify-center' : 'justify-end'
-                  }`}
-                >
-                  <div className={`max-w-[80%] p-4 rounded-lg ${
-                    message.sender === 'ai'
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'bg-blue-600 text-white'
-                  }`}>
-                    <p className="text-sm">{message.content}</p>
-                    <p className={`text-xs mt-2 ${
-                      message.sender === 'ai' ? 'text-blue-600' : 'text-blue-100'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-
-        {/* Message Composer */}
-        <div className="px-6 py-4 bg-white border-t border-gray-200">
-          <MessageComposer
-            mode={session.mode}
-            onSendMessage={handleSendMessage}
-            isDisabled={sessionLocked || boundaryDetected}
-            currentTurn={session.mode === 'couple' ? 'userA' : 'userA'}
-            messageCount={messages.length}
-            isLoading={isLoading}
-          />
-        </div>
-
-        {/* Solo to Couple Converter Modal */}
-        {showConverter && (
-          <SoloToCoupleConverter
-            soloSessionId={session.id}
-            originalSummary={messages.map(m => m.content).join(' ')}
-            onConvert={handleConversionComplete}
-            onCancel={() => setShowConverter(false)}
-          />
-        )}
       </div>
     );
   }
 
-  return null;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-4">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                {session.mode === 'couple' ? <Users className="w-5 h-5 text-blue-600" /> : <User className="w-5 h-5 text-blue-600" />}
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {session.mode === 'couple' ? 'Couple Session' : 'Solo Session'}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Session ID: {session.id}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <SafetyLevelIndicator level={session.safety_level} />
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          {/* Safety and Privacy Controls */}
+          <SafetyPrivacyGuard
+            safetyLevel={session.safety_level}
+            privacySettings={privacySettings}
+            onSettingsUpdate={updatePrivacySettings}
+            onDataExport={handleDataExport}
+            onDataDelete={handleDataDelete}
+            onRefresh={handleRefresh}
+          />
+        </div>
+
+        {/* Messages */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Conversation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {messages.length === 0 ? (
+              <EmptyStates 
+                type="welcome" 
+                mode={session.mode}
+                onAction={() => {/* Start conversation */}}
+              />
+            ) : (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.sender === 'ai' ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        message.sender === 'ai'
+                          ? 'bg-blue-100 text-blue-900'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(message.created_at).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Turn Indicator */}
+        <TurnIndicator turnState={session.turn_state} mode={session.mode} />
+
+        {/* Message Nudges */}
+        <MessageNudge 
+          messageCount={messageCount} 
+          onAction={() => setCurrentStep('mode-select')}
+        />
+
+        {/* Message Composer */}
+        <MessageComposer
+          mode={session.mode}
+          turnState={session.turn_state}
+          onSendMessage={sendMessage}
+          isLoading={isLoading}
+          safetyLevel={session.safety_level}
+          messageCount={messageCount}
+        />
+
+        {/* Solo to Couple Conversion */}
+        {session.mode === 'solo' && messageCount > 5 && (
+          <div className="mt-6">
+            <Alert className="border-blue-200 bg-blue-50">
+              <Users className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <strong>Ready to share?</strong> You can convert this solo session to a couple session 
+                    to share your insights with your partner.
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep('convert')}
+                    className="ml-4"
+                  >
+                    <ArrowRight className="w-4 h-4 mr-1" />
+                    Convert to Couple
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {/* Session Controls */}
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <div className="flex items-center space-x-1">
+              <Shield className="w-4 h-4" />
+              <span>Privacy Protected</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Lock className="w-4 h-4" />
+              <span>Encrypted</span>
+            </div>
+            <span>{messageCount} messages</span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={() => setCurrentStep('mode-select')}>
+              New Session
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentStep('mode-select')}>
+              End Session
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,249 +1,163 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Users, 
-  User, 
-  Heart, 
-  Brain, 
-  ArrowRight,
-  Lock,
-  Eye,
-  MessageCircle
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Heart, User, ArrowRight, Shield, Lock } from 'lucide-react';
 
 interface SessionModeSelectorProps {
   onModeSelect: (mode: 'couple' | 'solo') => void;
-  isAuthenticated: boolean;
-  hasCouple: boolean;
+  isLoading?: boolean;
 }
 
-export default function SessionModeSelector({ 
-  onModeSelect, 
-  isAuthenticated, 
-  hasCouple 
-}: SessionModeSelectorProps) {
+export function SessionModeSelector({ onModeSelect, isLoading = false }: SessionModeSelectorProps) {
   const [selectedMode, setSelectedMode] = useState<'couple' | 'solo' | null>(null);
-  const [showDetails, setShowDetails] = useState<'couple' | 'solo' | null>(null);
-
-  const modes = [
-    {
-      id: 'couple' as const,
-      title: 'Talk Together',
-      subtitle: 'Couple Session',
-      description: 'Neutral facilitator guiding turn-taking between partners',
-      icon: Users,
-      color: 'blue',
-      features: [
-        'Neutral third-party facilitation',
-        'Turn-taking guidance',
-        'Mutual understanding focus',
-        'Both partners participate'
-      ],
-      requirements: 'Both partners must be part of a couple',
-      available: hasCouple,
-      disabled: !hasCouple
-    },
-    {
-      id: 'solo' as const,
-      title: 'Reflect Alone',
-      subtitle: 'Solo Session',
-      description: 'Self-coaching mode for personal processing and preparation',
-      icon: User,
-      color: 'green',
-      features: [
-        'Personal reflection and processing',
-        'Self-coaching techniques',
-        'Private to you only',
-        'Optional conversion to couple session'
-      ],
-      requirements: 'Available to any authenticated user',
-      available: isAuthenticated,
-      disabled: false
-    }
-  ];
 
   const handleModeSelect = (mode: 'couple' | 'solo') => {
-    if (modes.find(m => m.id === mode)?.disabled) return;
-    
     setSelectedMode(mode);
-    setTimeout(() => {
-      onModeSelect(mode);
-    }, 300);
+    onModeSelect(mode);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
-          >
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Session Mode
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Select how you'd like to engage with our AI facilitator
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Mode Cards */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {modes.map((mode, index) => {
-            const Icon = mode.icon;
-            const isSelected = selectedMode === mode.id;
-            const isDisabled = mode.disabled;
-            
-            return (
-              <motion.div
-                key={mode.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className={`relative group cursor-pointer ${
-                  isDisabled ? 'cursor-not-allowed opacity-50' : 'hover:scale-105'
-                } transition-all duration-300`}
-                onClick={() => !isDisabled && handleModeSelect(mode.id)}
-                onMouseEnter={() => !isDisabled && setShowDetails(mode.id)}
-                onMouseLeave={() => setShowDetails(null)}
-              >
-                <div className={`
-                  relative p-8 rounded-2xl border-2 transition-all duration-300
-                  ${isSelected 
-                    ? 'border-blue-500 bg-blue-50 shadow-lg' 
-                    : isDisabled
-                    ? 'border-gray-200 bg-gray-50'
-                    : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg'
-                  }
-                `}>
-                  {/* Icon and Title */}
-                  <div className="text-center mb-6">
-                    <div className={`
-                      inline-flex items-center justify-center w-16 h-16 rounded-full mb-4
-                      ${mode.color === 'blue' ? 'bg-blue-100' : 'bg-green-100'}
-                      ${isSelected ? 'scale-110' : ''}
-                      transition-transform duration-300
-                    `}>
-                      <Icon className={`w-8 h-8 ${
-                        mode.color === 'blue' ? 'text-blue-600' : 'text-green-600'
-                      }`} />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      {mode.title}
-                    </h3>
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                      {mode.subtitle}
-                    </p>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-center mb-6">
-                    {mode.description}
-                  </p>
-
-                  {/* Features */}
-                  <div className="space-y-2 mb-6">
-                    {mode.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center text-sm text-gray-600">
-                        <div className={`w-2 h-2 rounded-full mr-3 ${
-                          mode.color === 'blue' ? 'bg-blue-400' : 'bg-green-400'
-                        }`} />
-                        {feature}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Requirements */}
-                  <div className="text-xs text-gray-500 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <strong>Requirements:</strong> {mode.requirements}
-                  </div>
-
-                  {/* Action Button */}
-                  <motion.button
-                    className={`
-                      w-full py-3 px-6 rounded-lg font-medium transition-all duration-300
-                      ${isSelected
-                        ? 'bg-blue-600 text-white'
-                        : isDisabled
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-100 text-gray-700 hover:bg-blue-600 hover:text-white'
-                      }
-                    `}
-                    whileHover={!isDisabled ? { scale: 1.02 } : {}}
-                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                    disabled={isDisabled}
-                  >
-                    {isDisabled ? 'Not Available' : isSelected ? 'Selected' : 'Choose This Mode'}
-                  </motion.button>
-
-                  {/* Selection Indicator */}
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-4 right-4 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
-                    >
-                      <ArrowRight className="w-4 h-4 text-white" />
-                    </motion.div>
-                  )}
-                </div>
-
-                {/* Detailed Info on Hover */}
-                {showDetails === mode.id && !isDisabled && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 right-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Lock className="w-4 h-4 mr-2" />
-                        <span>End-to-end encrypted</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Eye className="w-4 h-4 mr-2" />
-                        <span>
-                          {mode.id === 'couple' 
-                            ? 'Visible to both partners' 
-                            : 'Private to you only'
-                          }
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        <span>
-                          {mode.id === 'couple' 
-                            ? 'Turn-taking guidance' 
-                            : 'Self-reflection focus'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Privacy Notice */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-center text-sm text-gray-500 max-w-2xl mx-auto"
-        >
-          <p>
-            <strong>Privacy:</strong> Solo sessions are private to you. Couple sessions are visible to both partners. 
-            All content is encrypted and can be deleted at any time.
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Choose Your Session Mode
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Select how you'd like to engage with our AI therapist. Each mode is designed 
+            to provide the most effective support for your specific needs.
           </p>
-        </motion.div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Couple Session Card */}
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+              selectedMode === 'couple' 
+                ? 'ring-2 ring-blue-500 bg-blue-50' 
+                : 'hover:shadow-md'
+            }`}
+            onClick={() => handleModeSelect('couple')}
+          >
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Heart className="w-8 h-8 text-blue-600" />
+              </div>
+              <CardTitle className="text-2xl text-gray-900">Talk Together</CardTitle>
+              <CardDescription className="text-lg">
+                Couple Session
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>Structured dialogue</strong> with turn-taking between partners
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>AI facilitation</strong> to guide productive conversations
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>Real-time feedback</strong> and conflict resolution support
+                  </p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span className="flex items-center">
+                    <Shield className="w-4 h-4 mr-1" />
+                    Privacy Protected
+                  </span>
+                  <span className="flex items-center">
+                    <Lock className="w-4 h-4 mr-1" />
+                    Encrypted
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Solo Session Card */}
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+              selectedMode === 'solo' 
+                ? 'ring-2 ring-green-500 bg-green-50' 
+                : 'hover:shadow-md'
+            }`}
+            onClick={() => handleModeSelect('solo')}
+          >
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <User className="w-8 h-8 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl text-gray-900">Reflect Alone</CardTitle>
+              <CardDescription className="text-lg">
+                Solo Session
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>Personal reflection</strong> and self-discovery
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>AI guidance</strong> for emotional processing
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <ArrowRight className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-gray-700">
+                    <strong>Convert to couple</strong> when ready to share insights
+                  </p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span className="flex items-center">
+                    <Shield className="w-4 h-4 mr-1" />
+                    Private & Secure
+                  </span>
+                  <span className="flex items-center">
+                    <Lock className="w-4 h-4 mr-1" />
+                    Encrypted
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {isLoading && (
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center space-x-2 text-blue-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Creating your session...</span>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            All sessions are protected with end-to-end encryption and privacy controls. 
+            Your data is never shared without your explicit consent.
+          </p>
+        </div>
       </div>
     </div>
   );

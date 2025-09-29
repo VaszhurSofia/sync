@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-09-29T13:36:54.217Z",
+  "summary": {
+    "total": 15,
+    "success": 1,
+    "failed": 14
+  },
+  "results": [
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:unit"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:integration"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:performance"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:security"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:e2e"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:accessibility"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:api-contract"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:load"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run test:stress"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run lint:check && npm run format:check"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run type-check"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm audit --audit-level=moderate"
+    },
+    {
+      "status": "success",
+      "duration": 31
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run db:migrate:check"
+    },
+    {
+      "status": "failed",
+      "error": "Command failed: npm run openapi:validate"
+    }
+  ]
+}

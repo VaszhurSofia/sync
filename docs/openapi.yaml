@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
   title: Sync API
-  description: Couple's shared chat MVP with AI reflection and clarification
-  version: 0.1.0
+  description: Conflict de-escalation app with Couple and Solo session modes
+  version: 1.0.0
   contact:
     name: Sync Team
     email: support@sync.app
@@ -10,7 +10,7 @@ servers:
   - url: http://localhost:3001
     description: Development server
   - url: https://api-staging.sync.app
-    description: Staging server
+    description: Staging server (Basic Auth required)
   - url: https://api.sync.app
     description: Production server
 
@@ -39,6 +39,31 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
+
+  /health/crypto:
+    get:
+      tags:
+        - Health
+      summary: Crypto health check
+      description: Check encryption system health
+      security: []
+      responses:
+        '200':
+          description: Crypto system is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kms:
+                    type: string
+                    example: "ok"
+                  dek_age_days:
+                    type: number
+                    example: 7
+                  selftest:
+                    type: string
+                    example: "ok"
 
   /auth/request-code:
     post:
@@ -86,65 +111,18 @@ paths:
         '401':
           description: Invalid or expired code
 
-  /couples:
-    post:
-      tags:
-        - Couples
-      summary: Create a new couple
-      description: Create a new couple relationship
-      responses:
-        '201':
-          description: Couple created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateCoupleResponse'
-        '401':
-          description: Unauthorized
-
-  /invites:
-    post:
-      tags:
-        - Invites
-      summary: Create an invite
-      description: Create an invite for the partner to join the couple
-      responses:
-        '201':
-          description: Invite created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateInviteResponse'
-        '401':
-          description: Unauthorized
-
-  /invites/{code}/accept:
-    post:
-      tags:
-        - Invites
-      summary: Accept an invite
-      description: Accept an invite to join a couple
-      security: []
-      parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Invite accepted successfully
-        '400':
-          description: Invalid or expired invite code
-        '404':
-          description: Invite not found
-
   /sessions:
     post:
       tags:
         - Sessions
       summary: Create a new session
-      description: Start a new chat session
+      description: Start a new session with specified mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
       responses:
         '201':
           description: Session created successfully
@@ -154,13 +132,15 @@ paths:
                 $ref: '#/components/schemas/CreateSessionResponse'
         '401':
           description: Unauthorized
+        '400':
+          description: Invalid mode or request
 
   /sessions/{id}/messages:
     post:
       tags:
         - Messages
       summary: Send a message
-      description: Send a message in a session
+      description: Send a message in a session with turn-taking enforcement
       parameters:
         - name: id
           in: path
@@ -182,12 +162,16 @@ paths:
         '401':
           description: Unauthorized
         '409':
-          description: Session has reached boundary, no more messages allowed
+          description: Session locked (boundary or turn violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
       tags:
         - Messages
-      summary: Get messages
+      summary: Get messages with long-polling
       description: Get messages from a session with long-polling support
       parameters:
         - name: id
@@ -227,7 +211,7 @@ paths:
       tags:
         - Sessions
       summary: End a session
-      description: End the current chat session
+      description: End the current session
       parameters:
         - name: id
           in: path
@@ -248,7 +232,7 @@ paths:
       tags:
         - Feedback
       summary: Submit session feedback
-      description: Submit feedback for a completed session
+      description: Submit feedback for a session
       parameters:
         - name: id
           in: path
@@ -265,8 +249,6 @@ paths:
       responses:
         '204':
           description: Feedback submitted successfully
-        '400':
-          description: Invalid feedback data
         '401':
           description: Unauthorized
         '404':
@@ -293,10 +275,45 @@ paths:
         '404':
           description: Session not found
 
+  /sessions/{id}/convert-to-couple:
+    post:
+      tags:
+        - Sessions
+      summary: Convert solo session to couple session
+      description: Convert a solo session to a couple session with explicit consent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertToCoupleRequest'
+      responses:
+        '201':
+          description: Session converted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertToCoupleResponse'
+        '400':
+          description: Invalid conversion request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+        '409':
+          description: Session cannot be converted
+
   /boundary/resources:
     get:
       tags:
-        - Boundary
+        - Resources
       summary: Get boundary resources
       description: Get EU-only resources for boundary detection
       security: []
@@ -351,51 +368,57 @@ components:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
-    CreateCoupleResponse:
+    CreateSessionRequest:
       type: object
       required:
-        - coupleId
+        - mode
       properties:
+        mode:
+          type: string
+          enum: [couple, solo]
+          example: "couple"
         coupleId:
           type: string
           format: uuid
+          description: Required for couple mode
           example: "123e4567-e89b-12d3-a456-426614174000"
-
-    CreateInviteResponse:
-      type: object
-      required:
-        - code
-        - link
-      properties:
-        code:
-          type: string
-          example: "ABC123"
-        link:
-          type: string
-          format: uri
-          example: "https://sync.app/join/ABC123"
 
     CreateSessionResponse:
       type: object
       required:
         - sessionId
+        - mode
+        - turnState
       properties:
         sessionId:
           type: string
           format: uuid
           example: "123e4567-e89b-12d3-a456-426614174000"
+        mode:
+          type: string
+          enum: [couple, solo]
+          example: "couple"
+        turnState:
+          type: string
+          enum: [awaitingA, awaitingB, ai_reflect, boundary]
+          example: "awaitingA"
 
     CreateMessage:
       type: object
       required:
+        - sender
         - content
-        - client_message_id
+        - clientMessageId
       properties:
+        sender:
+          type: string
+          enum: [userA, userB]
+          example: "userA"
         content:
           type: string
           maxLength: 4000
           example: "I feel like we need to talk about our communication"
-        client_message_id:
+        clientMessageId:
           type: string
           format: uuid
           example: "123e4567-e89b-12d3-a456-426614174000"
@@ -404,33 +427,33 @@ components:
       type: object
       required:
         - id
-        - session_id
+        - sessionId
         - sender
-        - content_enc
-        - created_at
-        - safety_tags
-        - client_message_id
+        - content
+        - createdAt
+        - safetyTags
+        - clientMessageId
       properties:
         id:
           type: string
           format: uuid
-        session_id:
+        sessionId:
           type: string
           format: uuid
         sender:
           type: string
           enum: [userA, userB, ai]
-        content_enc:
+        content:
           type: string
-          description: Encrypted message content
-        created_at:
+          description: Decrypted message content
+        createdAt:
           type: string
           format: date-time
-        safety_tags:
+        safetyTags:
           type: array
           items:
             type: string
-        client_message_id:
+        clientMessageId:
           type: string
           format: uuid
 
@@ -449,6 +472,30 @@ components:
           enum: [angry, neutral, happy]
           example: "happy"
 
+    ConvertToCoupleRequest:
+      type: object
+      required:
+        - consent
+        - redactedSummary
+      properties:
+        consent:
+          type: boolean
+          example: true
+        redactedSummary:
+          type: string
+          maxLength: 2000
+          example: "We discussed communication issues and want to work together on this"
+
+    ConvertToCoupleResponse:
+      type: object
+      required:
+        - newCoupleSessionId
+      properties:
+        newCoupleSessionId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
     BoundaryResources:
       type: object
       required:
@@ -462,8 +509,17 @@ components:
         resources:
           type: array
           items:
-            type: string
-          example: ["crisis-helpline-eu", "couples-therapy-eu"]
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Crisis Helpline EU"
+              phone:
+                type: string
+                example: "+800-123-4567"
+              website:
+                type: string
+                example: "https://crisis-helpline.eu"
 
     ErrorResponse:
       type: object
@@ -473,10 +529,10 @@ components:
       properties:
         error:
           type: string
-          example: "VALIDATION_ERROR"
+          example: "TURN_LOCKED"
         message:
           type: string
-          example: "Invalid request data"
+          example: "It's not your turn to speak"
         code:
           type: string
-          example: "INVALID_EMAIL_FORMAT"
+          example: "TURN_VIOLATION"

@@ -124,15 +124,15 @@ async function registerRoutes() {
   const { authRoutes } = await import('./routes/auth');
   const { couplesRoutes } = await import('./routes/couples');
   const { healthRoutes } = await import('./routes/health');
-  const { sessionMessagesRoutes } = await import('./routes/sessions.messages');
-  const { sessionDeleteRoutes } = await import('./routes/sessions.delete');
+  // const { sessionMessagesRoutes } = await import('./routes/sessions.messages');
+  // const { sessionDeleteRoutes } = await import('./routes/sessions.delete');
   const { metricsRoutes } = await import('./routes/metrics');
   
   await fastify.register(healthRoutes);
   await fastify.register(authRoutes);
   await fastify.register(couplesRoutes);
-  await fastify.register(sessionMessagesRoutes);
-  await fastify.register(sessionDeleteRoutes);
+  // await fastify.register(sessionMessagesRoutes);
+  // await fastify.register(sessionDeleteRoutes);
   await fastify.register(metricsRoutes);
 
   // Staging gate

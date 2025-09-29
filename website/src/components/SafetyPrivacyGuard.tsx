@@ -1,396 +1,311 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Shield, 
-  AlertTriangle, 
   Lock, 
   Eye, 
   EyeOff, 
-  User, 
-  Users, 
-  AlertCircle,
+  AlertCircle, 
   CheckCircle,
-  X,
-  Phone,
-  Heart
+  Settings,
+  Download,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 
 interface SafetyPrivacyGuardProps {
-  mode: 'couple' | 'solo';
-  messageContent: string;
-  onSafetyViolation: (violation: SafetyViolation) => void;
-  onBoundaryDetected: () => void;
-  onSessionLock: () => void;
+  safetyLevel: 'low' | 'medium' | 'high' | 'critical';
+  privacySettings: {
+    dataRetention: number;
+    encryptionLevel: 'standard' | 'enhanced' | 'military';
+    auditLogging: boolean;
+    gdprCompliance: boolean;
+    dataAnonymization: boolean;
+  };
+  onSettingsUpdate: (settings: Partial<typeof privacySettings>) => void;
+  onDataExport: () => Promise<void>;
+  onDataDelete: () => Promise<void>;
+  onRefresh: () => void;
 }
 
-interface SafetyViolation {
-  type: 'self-harm' | 'abuse' | 'threats' | 'crisis';
-  severity: 'low' | 'medium' | 'high';
-  message: string;
-  action: 'warn' | 'block' | 'lock';
-}
-
-interface PrivacySettings {
-  soloContentPrivate: boolean;
-  coupleContentShared: boolean;
-  encryptionEnabled: boolean;
-  deleteOnEnd: boolean;
-}
-
-export default function SafetyPrivacyGuard({
-  mode,
-  messageContent,
-  onSafetyViolation,
-  onBoundaryDetected,
-  onSessionLock
+export function SafetyPrivacyGuard({
+  safetyLevel,
+  privacySettings,
+  onSettingsUpdate,
+  onDataExport,
+  onDataDelete,
+  onRefresh
 }: SafetyPrivacyGuardProps) {
-  const [safetyViolations, setSafetyViolations] = useState<SafetyViolation[]>([]);
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
-    soloContentPrivate: true,
-    coupleContentShared: true,
-    encryptionEnabled: true,
-    deleteOnEnd: true
-  });
-  const [showPrivacyPanel, setShowPrivacyPanel] = useState(false);
-  const [boundaryDetected, setBoundaryDetected] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Tier-1 deterministic safety checks
-  const performSafetyCheck = useCallback((content: string): SafetyViolation | null => {
-    const lowerContent = content.toLowerCase();
-    
-    // Self-harm indicators
-    if (lowerContent.includes('kill myself') || 
-        lowerContent.includes('end it all') || 
-        lowerContent.includes('not worth living')) {
-      return {
-        type: 'self-harm',
-        severity: 'high',
-        message: 'Content suggests self-harm. Please seek professional help immediately.',
-        action: 'lock'
-      };
+  const handleDataExport = async () => {
+    setIsLoading(true);
+    try {
+      await onDataExport();
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Abuse indicators
-    if (lowerContent.includes('hit me') || 
-        lowerContent.includes('beat me') || 
-        lowerContent.includes('abuse me')) {
-      return {
-        type: 'abuse',
-        severity: 'high',
-        message: 'Content suggests abuse. Please contact authorities or seek help.',
-        action: 'lock'
-      };
-    }
-    
-    // Threat indicators
-    if (lowerContent.includes('hurt you') || 
-        lowerContent.includes('kill you') || 
-        lowerContent.includes('threaten')) {
-      return {
-        type: 'threats',
-        severity: 'high',
-        message: 'Content contains threats. This is not appropriate for therapy.',
-        action: 'block'
-      };
-    }
-    
-    // Crisis indicators
-    if (lowerContent.includes('emergency') || 
-        lowerContent.includes('crisis') || 
-        lowerContent.includes('urgent help')) {
-      return {
-        type: 'crisis',
-        severity: 'medium',
-        message: 'Content suggests a crisis situation. Consider professional help.',
-        action: 'warn'
-      };
-    }
-    
-    return null;
-  }, []);
-
-  // Check message content for safety violations
-  useEffect(() => {
-    if (messageContent.trim()) {
-      const violation = performSafetyCheck(messageContent);
-      if (violation) {
-        setSafetyViolations(prev => [...prev, violation]);
-        onSafetyViolation(violation);
-        
-        if (violation.action === 'lock') {
-          setBoundaryDetected(true);
-          onBoundaryDetected();
-          onSessionLock();
-        }
-      }
-    }
-  }, [messageContent, performSafetyCheck, onSafetyViolation, onBoundaryDetected, onSessionLock]);
-
-  // Boundary template for safety violations
-  const getBoundaryTemplate = () => ({
-    mirror: {
-      partnerA: "I understand you're going through a difficult time.",
-      partnerB: "I can see this is really challenging for you both."
-    },
-    clarify: "This conversation has touched on some serious concerns that need professional support.",
-    explore: "Would you be open to connecting with a qualified therapist or counselor?",
-    micro_actions: [
-      "You might consider reaching out to a mental health professional who can provide appropriate support.",
-      "You could try contacting a crisis helpline if you need immediate assistance."
-    ],
-    check: "Did I respond appropriately to both of your needs?",
-    meta: {
-      total_sentences: 8,
-      version: mode === 'couple' ? 'couple_v2.0' : 'solo_v1.0'
-    }
-  });
-
-  const getCrisisResources = () => [
-    { name: 'National Suicide Prevention Lifeline', phone: '988', available: '24/7' },
-    { name: 'Crisis Text Line', phone: 'Text HOME to 741741', available: '24/7' },
-    { name: 'National Domestic Violence Hotline', phone: '1-800-799-7233', available: '24/7' },
-    { name: 'SAMHSA National Helpline', phone: '1-800-662-4357', available: '24/7' }
-  ];
-
-  const handleDismissViolation = (index: number) => {
-    setSafetyViolations(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handlePrivacyChange = (key: keyof PrivacySettings, value: boolean) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: value }));
+  const handleDataDelete = async () => {
+    if (window.confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
+      setIsLoading(true);
+      try {
+        await onDataDelete();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const getSafetyColor = () => {
+    switch (safetyLevel) {
+      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
+      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      default: return 'text-green-600 bg-green-50 border-green-200';
+    }
+  };
+
+  const getSafetyMessage = () => {
+    switch (safetyLevel) {
+      case 'critical': return 'Critical safety level detected';
+      case 'high': return 'High safety level - content flagged';
+      case 'medium': return 'Medium safety level - content reviewed';
+      default: return 'Low safety level - all clear';
+    }
   };
 
   return (
     <div className="space-y-4">
-      {/* Safety Violations */}
-      <AnimatePresence>
-        {safetyViolations.map((violation, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`
-              p-4 rounded-lg border-l-4
-              ${violation.severity === 'high' 
-                ? 'bg-red-50 border-red-500 text-red-800' 
-                : violation.severity === 'medium'
-                ? 'bg-amber-50 border-amber-500 text-amber-800'
-                : 'bg-blue-50 border-blue-500 text-blue-800'
-              }
-            `}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-3">
-                <AlertTriangle className={`w-5 h-5 mt-0.5 ${
-                  violation.severity === 'high' ? 'text-red-600' : 'text-amber-600'
-                }`} />
-                <div>
-                  <h4 className="font-medium mb-1">
-                    {violation.type === 'self-harm' && 'Self-Harm Concern'}
-                    {violation.type === 'abuse' && 'Abuse Concern'}
-                    {violation.type === 'threats' && 'Threat Detected'}
-                    {violation.type === 'crisis' && 'Crisis Situation'}
-                  </h4>
-                  <p className="text-sm">{violation.message}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleDismissViolation(index)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Safety Status */}
+      <Alert className={`${getSafetyColor()}`}>
+        <Shield className="h-4 w-4" />
+        <AlertDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <strong>Safety Status:</strong> {getSafetyMessage()}
             </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-
-      {/* Boundary Detected */}
-      {boundaryDetected && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-6 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <div className="text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-6 h-6 text-red-600" />
-            </div>
-            <h3 className="text-lg font-bold text-red-800 mb-2">
-              Safety Boundary Detected
-            </h3>
-            <p className="text-red-700 mb-4">
-              This conversation has touched on serious concerns that require professional support. 
-              The session has been locked for your safety.
-            </p>
-            
-            {/* Crisis Resources */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-red-800">Crisis Resources</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {getCrisisResources().map((resource, index) => (
-                  <div key={index} className="p-3 bg-white rounded-lg border border-red-200">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4 text-red-600" />
-                      <span className="font-medium text-sm">{resource.name}</span>
-                    </div>
-                    <p className="text-sm text-red-700 mt-1">{resource.phone}</p>
-                    <p className="text-xs text-red-600">{resource.available}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Privacy Settings Panel */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Lock className="w-5 h-5 text-gray-600" />
-            <h3 className="font-medium text-gray-900">Privacy & Safety</h3>
-          </div>
-          <button
-            onClick={() => setShowPrivacyPanel(!showPrivacyPanel)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            {showPrivacyPanel ? 'Hide Details' : 'Show Details'}
-          </button>
-        </div>
-
-        {/* Privacy Status */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center space-x-2">
-            {mode === 'solo' ? (
-              <User className="w-4 h-4 text-green-600" />
-            ) : (
-              <Users className="w-4 h-4 text-blue-600" />
-            )}
-            <span className="text-sm text-gray-600">
-              {mode === 'solo' ? 'Private to you' : 'Shared with partner'}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Shield className="w-4 h-4 text-green-600" />
-            <span className="text-sm text-gray-600">End-to-end encrypted</span>
-          </div>
-        </div>
-
-        {/* Detailed Privacy Settings */}
-        <AnimatePresence>
-          {showPrivacyPanel && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-3"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              className="ml-4"
             >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Refresh
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+
+      {/* Privacy Controls */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center">
+                <Lock className="w-5 h-5 mr-2" />
+                Privacy & Safety Controls
+              </CardTitle>
+              <CardDescription>
+                Manage your privacy settings and data controls
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              {isExpanded ? 'Hide' : 'Show'} Settings
+            </Button>
+          </div>
+        </CardHeader>
+
+        {isExpanded && (
+          <CardContent className="space-y-6">
+            {/* Privacy Settings */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Privacy Settings</h4>
+              
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Eye className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Solo content private</span>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Data Retention
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      How long to keep your data (days)
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">Enabled</span>
-                  </div>
+                  <select
+                    value={privacySettings.dataRetention}
+                    onChange={(e) => onSettingsUpdate({ 
+                      dataRetention: parseInt(e.target.value) 
+                    })}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value={7}>7 days</option>
+                    <option value={30}>30 days</option>
+                    <option value={60}>60 days</option>
+                    <option value={90}>90 days</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Couple content shared</span>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Encryption Level
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Security level for your data
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">Enabled</span>
-                  </div>
+                  <select
+                    value={privacySettings.encryptionLevel}
+                    onChange={(e) => onSettingsUpdate({ 
+                      encryptionLevel: e.target.value as 'standard' | 'enhanced' | 'military'
+                    })}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="enhanced">Enhanced</option>
+                    <option value="military">Military</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Lock className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Encryption at rest</span>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Audit Logging
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Track system access and changes
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">Enabled</span>
-                  </div>
+                  <Switch
+                    checked={privacySettings.auditLogging}
+                    onCheckedChange={(checked) => onSettingsUpdate({ 
+                      auditLogging: checked 
+                    })}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Delete on session end</span>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Data Anonymization
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Remove personal identifiers from logs
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">Enabled</span>
-                  </div>
+                  <Switch
+                    checked={privacySettings.dataAnonymization}
+                    onCheckedChange={(checked) => onSettingsUpdate({ 
+                      dataAnonymization: checked 
+                    })}
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Safety Features */}
-              <div className="pt-3 border-t border-gray-200">
-                <h4 className="font-medium text-gray-900 mb-2">Safety Features</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span>Tier-1 safety boundary detection</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span>Automatic session locking on violations</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span>Crisis resource recommendations</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span>Professional help referrals</span>
-                  </div>
+            {/* GDPR Controls */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Data Rights (GDPR)</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleDataExport}
+                  disabled={isLoading}
+                  className="flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export My Data</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleDataDelete}
+                  disabled={isLoading}
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete My Data</span>
+                </Button>
+              </div>
+
+              <div className="text-xs text-gray-500 space-y-1">
+                <p>• <strong>Export:</strong> Download all your data in a portable format</p>
+                <p>• <strong>Delete:</strong> Permanently remove all your data (cannot be undone)</p>
+              </div>
+            </div>
+
+            {/* Security Status */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Security Status</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-800">End-to-End Encrypted</span>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-800">GDPR Compliant</span>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-800">Audit Logged</span>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-800">Data Anonymized</span>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    </div>
+  );
+}
 
-      {/* Mode-specific Privacy Notice */}
-      <div className={`p-4 rounded-lg border ${
-        mode === 'solo' 
-          ? 'bg-green-50 border-green-200' 
-          : 'bg-blue-50 border-blue-200'
-      }`}>
-        <div className="flex items-start space-x-3">
-          {mode === 'solo' ? (
-            <User className="w-5 h-5 text-green-600 mt-0.5" />
-          ) : (
-            <Users className="w-5 h-5 text-blue-600 mt-0.5" />
-          )}
-          <div>
-            <h4 className={`font-medium ${
-              mode === 'solo' ? 'text-green-800' : 'text-blue-800'
-            }`}>
-              {mode === 'solo' ? 'Solo Session Privacy' : 'Couple Session Privacy'}
-            </h4>
-            <p className={`text-sm ${
-              mode === 'solo' ? 'text-green-700' : 'text-blue-700'
-            }`}>
-              {mode === 'solo' 
-                ? 'This session is private to you. Content is encrypted and can be deleted at any time. You can optionally convert to a couple session later.'
-                : 'This session is shared with your partner. Both of you can see all messages. Content is encrypted and can be deleted at any time.'
-              }
-            </p>
-          </div>
-        </div>
-      </div>
+// Safety level indicator component
+export function SafetyLevelIndicator({ level }: { level: 'low' | 'medium' | 'high' | 'critical' }) {
+  const getColor = () => {
+    switch (level) {
+      case 'critical': return 'text-red-600 bg-red-100';
+      case 'high': return 'text-orange-600 bg-orange-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      default: return 'text-green-600 bg-green-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (level) {
+      case 'critical': return <AlertCircle className="w-4 h-4" />;
+      case 'high': return <AlertCircle className="w-4 h-4" />;
+      case 'medium': return <AlertCircle className="w-4 h-4" />;
+      default: return <CheckCircle className="w-4 h-4" />;
+    }
+  };
+
+  return (
+    <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getColor()}`}>
+      {getIcon()}
+      <span>Safety Level: {level.toUpperCase()}</span>
     </div>
   );
 }

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Export API types
+export * from './api';
+
 // User and Authentication Types
 export const UserSchema = z.object({
   id: z.string().uuid(),

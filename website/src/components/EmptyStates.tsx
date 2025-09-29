@@ -1,262 +1,284 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  MessageCircle, 
-  Users, 
-  User, 
+  MessageSquare, 
+  Clock, 
+  AlertCircle, 
   Heart, 
-  Lightbulb, 
-  Clock,
-  AlertTriangle,
-  CheckCircle,
+  Users, 
   ArrowRight,
-  Sparkles
+  RefreshCw,
+  Pause
 } from 'lucide-react';
 
 interface EmptyStatesProps {
-  mode: 'couple' | 'solo';
-  messageCount: number;
-  isWaitingForPartner?: boolean;
-  onStartConversation?: () => void;
-  onConvertToCouple?: () => void;
+  type: 'welcome' | 'nudge' | 'limit' | 'boundary' | 'loading';
+  mode?: 'couple' | 'solo';
+  messageCount?: number;
+  onAction?: () => void;
+  onRefresh?: () => void;
 }
 
-export default function EmptyStates({
-  mode,
-  messageCount,
-  isWaitingForPartner = false,
-  onStartConversation,
-  onConvertToCouple
+export function EmptyStates({ 
+  type, 
+  mode = 'couple', 
+  messageCount = 0, 
+  onAction, 
+  onRefresh 
 }: EmptyStatesProps) {
-  const [showNudge, setShowNudge] = useState(false);
-  const [showHardStop, setShowHardStop] = useState(false);
-
-  // Message count nudges
-  useEffect(() => {
-    if (messageCount >= 30 && messageCount < 50) {
-      setShowNudge(true);
-    } else if (messageCount >= 50) {
-      setShowHardStop(true);
-      setShowNudge(false);
-    } else {
-      setShowNudge(false);
-      setShowHardStop(false);
-    }
-  }, [messageCount]);
-
-  const getEmptyStateContent = () => {
-    if (mode === 'couple') {
-      return {
-        icon: Users,
-        title: 'Start Your Couple Session',
-        subtitle: 'Begin your conversation together',
-        description: 'Take turns sharing your thoughts and feelings. The AI will help facilitate understanding between you both.',
-        tips: [
-          'Share 1-3 sentences at a time',
-          'Use "I" statements to express your perspective',
-          'Listen without interrupting your partner',
-          'Focus on your own feelings, not your partner\'s actions'
-        ],
-        actionText: 'Start Conversation',
-        color: 'blue'
-      };
-    } else {
-      return {
-        icon: User,
-        title: 'Begin Your Solo Reflection',
-        subtitle: 'Your private space for processing',
-        description: 'Write freely about what\'s on your mind. You\'ll receive reflection and guidance for your next steps.',
-        tips: [
-          'Write openly about your thoughts and feelings',
-          'Describe situations that are challenging you',
-          'You\'ll get personalized reflection and next steps',
-          'This content is private to you only'
-        ],
-        actionText: 'Start Reflecting',
-        color: 'green'
-      };
-    }
-  };
-
-  const content = getEmptyStateContent();
-  const Icon = content.icon;
-
-  if (showHardStop) {
+  
+  if (type === 'welcome') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center min-h-[400px] p-8"
-      >
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Session Limit Reached
-          </h3>
-          <p className="text-gray-600 mb-6">
-            You've reached the maximum of 50 messages for this session. 
-            Please end this session and start a new one to continue.
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={onStartConversation}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Start New Session
-            </button>
-            {mode === 'solo' && onConvertToCouple && (
-              <button
-                onClick={onConvertToCouple}
-                className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+      <div className="text-center py-12">
+        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <MessageSquare className="w-8 h-8 text-blue-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {mode === 'couple' ? 'Start Your Conversation' : 'Begin Your Reflection'}
+        </h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          {mode === 'couple' 
+            ? 'Take turns sharing your thoughts and feelings. The AI will help facilitate a productive dialogue.'
+            : 'Share your thoughts freely. The AI will provide gentle reflection and guidance.'
+          }
+        </p>
+        {onAction && (
+          <Button onClick={onAction} className="flex items-center space-x-2">
+            <MessageSquare className="w-4 h-4" />
+            <span>Start {mode === 'couple' ? 'Conversation' : 'Reflection'}</span>
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (type === 'nudge') {
+    return (
+      <Alert className="border-yellow-200 bg-yellow-50">
+        <Clock className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <strong>Session Length Reminder:</strong> You've been chatting for a while. 
+              Consider taking a break or wrapping up soon.
+            </div>
+            {onRefresh && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onRefresh}
+                className="ml-4"
               >
-                Convert to Couple Session
-              </button>
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Continue
+              </Button>
+            )}
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (type === 'limit') {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <Pause className="w-8 h-8 text-red-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Session Limit Reached
+        </h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          You've reached the maximum message limit for this session. 
+          Consider taking a break or starting a new session.
+        </p>
+        <div className="space-y-3">
+          {onAction && (
+            <Button onClick={onAction} className="w-full">
+              Start New Session
+            </Button>
+          )}
+          <div className="text-sm text-gray-500">
+            <p>Session Statistics:</p>
+            <p>{messageCount} messages exchanged</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'boundary') {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className="w-8 h-8 text-red-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Session Paused for Safety
+        </h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          We've detected content that may indicate you're in distress. 
+          Your safety is important to us.
+        </p>
+        
+        <div className="space-y-4">
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <strong>Emergency Resources:</strong>
+              <ul className="mt-2 space-y-1 text-sm">
+                <li>• Crisis Helpline: +800-123-4567</li>
+                <li>• Emergency Services: 112 (EU)</li>
+                <li>• National Suicide Prevention: +800-273-8255</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              If you're in immediate danger, please contact emergency services.
+            </p>
+            {onRefresh && (
+              <Button 
+                variant="outline" 
+                onClick={onRefresh}
+                className="w-full"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Resume Session (if safe)
+              </Button>
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
-  if (showNudge) {
+  if (type === 'loading') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
+      <div className="text-center py-12">
+        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Processing Your Message
+        </h3>
+        <p className="text-gray-600 mb-6">
+          The AI is analyzing your message and preparing a response...
+        </p>
+        <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+          <Shield className="w-4 h-4" />
+          <span>Safety checks in progress</span>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// Nudge component for message count warnings
+export function MessageNudge({ messageCount, onAction }: { messageCount: number; onAction?: () => void }) {
+  if (messageCount >= 50) {
+    return (
+      <Alert className="border-red-200 bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <AlertDescription className="text-red-800">
+          <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-amber-800 mb-1">
-                Consider Taking a Break
-              </h4>
-              <p className="text-sm text-amber-700">
-                You've sent {messageCount} messages. Consider summarizing your thoughts 
-                or taking a short break before continuing.
-              </p>
+              <strong>Session Limit Reached:</strong> You've reached the maximum message limit. 
+              Please start a new session.
             </div>
+            {onAction && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onAction}
+                className="ml-4"
+              >
+                New Session
+              </Button>
+            )}
           </div>
-        </div>
-      </motion.div>
+        </AlertDescription>
+      </Alert>
     );
   }
 
-  if (isWaitingForPartner && mode === 'couple') {
+  if (messageCount >= 30) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center min-h-[400px] p-8"
-      >
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Users className="w-8 h-8 text-blue-600" />
+      <Alert className="border-yellow-200 bg-yellow-50">
+        <Clock className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <strong>Session Length:</strong> You've been chatting for a while. 
+              Consider taking a break or wrapping up soon.
+            </div>
+            {onAction && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onAction}
+                className="ml-4"
+              >
+                Continue
+              </Button>
+            )}
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Waiting for Your Partner
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Your partner hasn't joined the session yet. Once they're here, 
-            you can begin your conversation together.
-          </p>
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-            <span>Waiting for partner to join...</span>
-          </div>
-        </div>
-      </motion.div>
+        </AlertDescription>
+      </Alert>
     );
   }
+
+  return null;
+}
+
+// Turn indicator for couple mode
+export function TurnIndicator({ 
+  turnState, 
+  mode 
+}: { 
+  turnState: 'awaitingA' | 'awaitingB' | 'ai_reflect' | 'boundary';
+  mode: 'couple' | 'solo';
+}) {
+  if (mode === 'solo') {
+    return (
+      <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-3 rounded-lg">
+        <MessageSquare className="w-4 h-4" />
+        <span className="text-sm">
+          {turnState === 'ai_reflect' 
+            ? 'AI is processing your message...' 
+            : 'Share your thoughts freely'
+          }
+        </span>
+      </div>
+    );
+  }
+
+  const getTurnMessage = () => {
+    switch (turnState) {
+      case 'awaitingA':
+        return 'Waiting for User A to respond...';
+      case 'awaitingB':
+        return 'Waiting for User B to respond...';
+      case 'ai_reflect':
+        return 'AI is processing your conversation...';
+      case 'boundary':
+        return 'Session paused for safety review';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center min-h-[400px] p-8"
-    >
-      <div className="text-center max-w-lg">
-        {/* Icon */}
-        <div className={`w-20 h-20 ${
-          content.color === 'blue' ? 'bg-blue-100' : 'bg-green-100'
-        } rounded-full flex items-center justify-center mx-auto mb-6`}>
-          <Icon className={`w-10 h-10 ${
-            content.color === 'blue' ? 'text-blue-600' : 'text-green-600'
-          }`} />
-        </div>
-
-        {/* Title */}
-        <h3 className="text-3xl font-bold text-gray-900 mb-2">
-          {content.title}
-        </h3>
-        <p className="text-lg text-gray-600 mb-6">
-          {content.subtitle}
-        </p>
-
-        {/* Description */}
-        <p className="text-gray-600 mb-8">
-          {content.description}
-        </p>
-
-        {/* Tips */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h4 className="font-medium text-gray-900 mb-4 flex items-center justify-center space-x-2">
-            <Lightbulb className="w-5 h-5 text-yellow-500" />
-            <span>Tips for Success</span>
-          </h4>
-          <ul className="space-y-2 text-sm text-gray-600">
-            {content.tips.map((tip, index) => (
-              <li key={index} className="flex items-start space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Action Button */}
-        <motion.button
-          onClick={onStartConversation}
-          className={`
-            inline-flex items-center space-x-2 px-8 py-4 rounded-lg font-medium text-white
-            ${content.color === 'blue' 
-              ? 'bg-blue-600 hover:bg-blue-700' 
-              : 'bg-green-600 hover:bg-green-700'
-            }
-            transition-all duration-200 hover:scale-105
-          `}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Sparkles className="w-5 h-5" />
-          <span>{content.actionText}</span>
-          <ArrowRight className="w-5 h-5" />
-        </motion.button>
-
-        {/* Mode-specific additional info */}
-        {mode === 'solo' && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
-              <strong>Privacy:</strong> This session is private to you. You can optionally 
-              convert it to a couple session later to share insights with your partner.
-            </p>
-          </div>
-        )}
-
-        {mode === 'couple' && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Shared Session:</strong> Both partners can see all messages. 
-              The AI provides neutral facilitation to help you understand each other better.
-            </p>
-          </div>
-        )}
-      </div>
-    </motion.div>
+    <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-3 rounded-lg">
+      <Users className="w-4 h-4" />
+      <span className="text-sm">{getTurnMessage()}</span>
+    </div>
   );
 }

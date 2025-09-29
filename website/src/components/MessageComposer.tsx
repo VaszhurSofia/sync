@@ -1,60 +1,31 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  MessageCircle, 
-  User, 
-  Users, 
-  Lightbulb,
-  Clock,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Send, AlertCircle, Shield, Lock, MessageSquare } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface MessageComposerProps {
   mode: 'couple' | 'solo';
-  onSendMessage: (content: string) => void;
-  isDisabled?: boolean;
-  currentTurn?: 'userA' | 'userB' | 'ai';
-  messageCount?: number;
+  turnState: 'awaitingA' | 'awaitingB' | 'ai_reflect' | 'boundary';
+  onSendMessage: (content: string) => Promise<void>;
   isLoading?: boolean;
+  safetyLevel?: 'low' | 'medium' | 'high' | 'critical';
+  messageCount?: number;
 }
 
-export default function MessageComposer({
-  mode,
-  onSendMessage,
-  isDisabled = false,
-  currentTurn,
-  messageCount = 0,
-  isLoading = false
+export function MessageComposer({ 
+  mode, 
+  turnState, 
+  onSendMessage, 
+  isLoading = false,
+  safetyLevel = 'low',
+  messageCount = 0
 }: MessageComposerProps) {
   const [message, setMessage] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const [showHints, setShowHints] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Message count nudges
-  const shouldShowNudge = messageCount >= 30;
-  const shouldShowHardStop = messageCount >= 50;
-
-  // Mode-specific hints
-  const coupleHints = [
-    "Share 1-3 sentences about what you're feeling",
-    "Focus on your own experience, not your partner's",
-    "Use 'I' statements to express your perspective",
-    "Avoid blame or criticism - focus on your feelings"
-  ];
-
-  const soloHints = [
-    "Write freely about what's on your mind",
-    "Describe your feelings and thoughts openly",
-    "You'll get reflection and a tiny next step",
-    "This is your private space for processing"
-  ];
-
-  const hints = mode === 'couple' ? coupleHints : soloHints;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -64,210 +35,158 @@ export default function MessageComposer({
     }
   }, [message]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isDisabled && !shouldShowHardStop) {
-      onSendMessage(message.trim());
+    if (!message.trim() || isSending) return;
+
+    setIsSending(true);
+    try {
+      await onSendMessage(message.trim());
       setMessage('');
-      setShowHints(false);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
-  const getComposerHint = () => {
+  const getModeHint = () => {
     if (mode === 'couple') {
-      if (currentTurn === 'userA') {
-        return "It's your turn. Share 1–3 sentences.";
-      } else if (currentTurn === 'userB') {
-        return "It's your turn. Share 1–3 sentences.";
-      } else if (currentTurn === 'ai') {
-        return "AI is processing your conversation...";
-      }
-      return "Waiting for your partner to respond...";
+      return "It's your turn. Share 1–3 sentences.";
     } else {
       return "Write freely; you'll get reflection + a tiny next step.";
     }
   };
 
-  const getComposerPlaceholder = () => {
-    if (mode === 'couple') {
-      return "Share what you're feeling right now...";
-    } else {
-      return "What's on your mind? Write freely...";
+  const getTurnStateMessage = () => {
+    switch (turnState) {
+      case 'awaitingA':
+        return "Waiting for User A to respond...";
+      case 'awaitingB':
+        return "Waiting for User B to respond...";
+      case 'ai_reflect':
+        return "AI is processing your message...";
+      case 'boundary':
+        return "Session paused for safety review";
+      default:
+        return "";
     }
   };
 
+  const canSendMessage = () => {
+    if (mode === 'solo') {
+      return turnState === 'ai_reflect' || turnState === 'awaitingA';
+    } else {
+      return (turnState === 'awaitingA' || turnState === 'awaitingB') && !isLoading;
+    }
+  };
+
+  const getSafetyAlert = () => {
+    if (safetyLevel === 'critical') {
+      return (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <strong>Safety Alert:</strong> Your message contains concerning content. 
+            Please consider reaching out to someone you trust or contact emergency services.
+          </AlertDescription>
+        </Alert>
+      );
+    } else if (safetyLevel === 'high') {
+      return (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            <strong>Content Flagged:</strong> Your message has been flagged for review. 
+            Consider rephrasing or taking a break.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
+  const getNudgeMessage = () => {
+    if (messageCount >= 50) {
+      return (
+        <Alert className="border-yellow-200 bg-yellow-50">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
+            <strong>Session Limit:</strong> You've reached the maximum message limit. 
+            Consider taking a break or starting a new session.
+          </AlertDescription>
+        </Alert>
+      );
+    } else if (messageCount >= 30) {
+      return (
+        <Alert className="border-blue-200 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <strong>Session Length:</strong> You've been chatting for a while. 
+            Consider taking a break or wrapping up soon.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Message Count Nudges */}
-      <AnimatePresence>
-        {shouldShowNudge && !shouldShowHardStop && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg"
-          >
-            <div className="flex items-center text-amber-800">
-              <Clock className="w-5 h-5 mr-2" />
-              <span className="font-medium">
-                You've sent {messageCount} messages. Consider taking a break or summarizing your thoughts.
-              </span>
-            </div>
-          </motion.div>
-        )}
+    <div className="space-y-4">
+      {/* Safety and Nudge Alerts */}
+      {getSafetyAlert()}
+      {getNudgeMessage()}
 
-        {shouldShowHardStop && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
-          >
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-2" />
-              <span className="font-medium">
-                Session limit reached ({messageCount} messages). Please end this session and start a new one.
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Composer */}
-      <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-lg overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {mode === 'couple' ? (
-                <Users className="w-5 h-5 text-blue-600" />
-              ) : (
-                <User className="w-5 h-5 text-green-600" />
-              )}
-              <div>
-                <h3 className="font-medium text-gray-900">
-                  {mode === 'couple' ? 'Couple Session' : 'Solo Session'}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {getComposerHint()}
-                </p>
-              </div>
-            </div>
-            
-            {/* Hints Toggle */}
-            <button
-              onClick={() => setShowHints(!showHints)}
-              className="flex items-center space-x-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Lightbulb className="w-4 h-4" />
-              <span>Hints</span>
-            </button>
-          </div>
+      {/* Turn State Indicator */}
+      {!canSendMessage() && (
+        <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-3 rounded-lg">
+          <MessageSquare className="w-4 h-4" />
+          <span className="text-sm">{getTurnStateMessage()}</span>
         </div>
+      )}
 
-        {/* Hints Panel */}
-        <AnimatePresence>
-          {showHints && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-6 py-4 bg-blue-50 border-b border-blue-100"
-            >
-              <div className="space-y-2">
-                <h4 className="font-medium text-blue-900 mb-2">
-                  {mode === 'couple' ? 'Couple Session Tips' : 'Solo Session Tips'}
-                </h4>
-                {hints.map((hint, index) => (
-                  <div key={index} className="flex items-start space-x-2 text-sm text-blue-800">
-                    <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>{hint}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Message Input */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="relative">
-            <textarea
+      {/* Message Composer */}
+      {canSendMessage() && (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-2">
+            <label htmlFor="message" className="text-sm font-medium text-gray-700">
+              {mode === 'couple' ? 'Your Message' : 'Share Your Thoughts'}
+            </label>
+            <Textarea
               ref={textareaRef}
+              id="message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={getComposerPlaceholder()}
-              disabled={isDisabled || shouldShowHardStop || isLoading}
-              className={`
-                w-full resize-none border-0 focus:ring-0 focus:outline-none
-                placeholder-gray-400 text-gray-900
-                ${isDisabled || shouldShowHardStop ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}
-                transition-colors duration-200
-              `}
-              rows={3}
-              maxLength={1000}
+              placeholder={getModeHint()}
+              className="min-h-[100px] max-h-[200px] resize-none"
+              disabled={isSending || isLoading}
             />
-            
-            {/* Character Count */}
-            <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-              {message.length}/1000
-            </div>
           </div>
 
-          {/* Action Bar */}
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
-                <MessageCircle className="w-4 h-4" />
-                <span>{messageCount} messages</span>
+                <Shield className="w-4 h-4" />
+                <span>Privacy Protected</span>
               </div>
-              
-              {mode === 'couple' && currentTurn && (
-                <div className={`flex items-center space-x-1 ${
-                  currentTurn === 'ai' ? 'text-blue-600' : 'text-green-600'
-                }`}>
-                  {currentTurn === 'ai' ? (
-                    <>
-                      <Clock className="w-4 h-4" />
-                      <span>AI Processing</span>
-                    </>
-                  ) : (
-                    <>
-                      <Users className="w-4 h-4" />
-                      <span>Your Turn</span>
-                    </>
-                  )}
-                </div>
+              <div className="flex items-center space-x-1">
+                <Lock className="w-4 h-4" />
+                <span>Encrypted</span>
+              </div>
+              {messageCount > 0 && (
+                <span>{messageCount} messages</span>
               )}
             </div>
 
-            <motion.button
+            <Button
               type="submit"
-              disabled={!message.trim() || isDisabled || shouldShowHardStop || isLoading}
-              className={`
-                flex items-center space-x-2 px-6 py-2 rounded-lg font-medium transition-all duration-200
-                ${!message.trim() || isDisabled || shouldShowHardStop || isLoading
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105'
-                }
-              `}
-              whileHover={!isDisabled && !shouldShowHardStop && message.trim() ? { scale: 1.05 } : {}}
-              whileTap={!isDisabled && !shouldShowHardStop && message.trim() ? { scale: 0.95 } : {}}
+              disabled={!message.trim() || isSending || isLoading}
+              className="flex items-center space-x-2"
             >
-              {isLoading ? (
+              {isSending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Processing...</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Sending...</span>
                 </>
               ) : (
                 <>
@@ -275,23 +194,33 @@ export default function MessageComposer({
                   <span>Send</span>
                 </>
               )}
-            </motion.button>
+            </Button>
           </div>
         </form>
-      </div>
+      )}
 
-      {/* Mode-specific Footer */}
-      <div className="mt-4 text-center text-sm text-gray-500">
+      {/* Mode-specific Tips */}
+      <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
         {mode === 'couple' ? (
-          <p>
-            <strong>Couple Mode:</strong> Both partners take turns sharing. 
-            AI provides neutral facilitation and mutual understanding.
-          </p>
+          <div>
+            <strong>Couple Mode Tips:</strong>
+            <ul className="mt-1 space-y-1">
+              <li>• Take turns speaking (1-3 sentences each)</li>
+              <li>• Listen actively to your partner's perspective</li>
+              <li>• Use "I" statements to express your feelings</li>
+              <li>• The AI will help facilitate productive dialogue</li>
+            </ul>
+          </div>
         ) : (
-          <p>
-            <strong>Solo Mode:</strong> Private reflection space. 
-            You can optionally convert to a couple session later.
-          </p>
+          <div>
+            <strong>Solo Mode Tips:</strong>
+            <ul className="mt-1 space-y-1">
+              <li>• Write freely about your thoughts and feelings</li>
+              <li>• The AI will provide reflection and gentle guidance</li>
+              <li>• You can convert to couple mode when ready to share</li>
+              <li>• Your solo sessions remain completely private</li>
+            </ul>
+          </div>
         )}
       </div>
     </div>

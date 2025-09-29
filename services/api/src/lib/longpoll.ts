@@ -1,400 +1,156 @@
-import { EventEmitter } from 'events';
-import { logger } from '../logger';
+import { FastifyRequest, FastifyReply } from 'fastify';
 
-export interface LongPollConfig {
-  maxWaitMs: number;
-  heartbeatIntervalMs: number;
-  defaultWaitMs: number;
-  maxConcurrentPolls: number;
-}
-
-export interface LongPollRequest {
-  sessionId: string;
-  clientId: string;
-  after?: string;
+export interface LongPollOptions {
   waitMs: number;
-  startTime: Date;
-  abortController: AbortController;
-  resolve: (value: any) => void;
-  reject: (error: any) => void;
+  timeout: number;
+  checkInterval: number;
 }
 
-export interface LongPollResponse {
-  messages?: any[];
-  heartbeat?: boolean;
-  timestamp: string;
-  watermark?: string;
+export interface MessageWatermark {
+  sessionId: string;
+  lastMessageId: string;
+  lastTimestamp: string;
 }
 
-export class LongPollManager extends EventEmitter {
-  private activePolls = new Map<string, LongPollRequest[]>();
-  private config: LongPollConfig;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
-
-  constructor(config: Partial<LongPollConfig> = {}) {
-    super();
-    
-    this.config = {
-      maxWaitMs: 30000, // 30 seconds max
-      heartbeatIntervalMs: 5000, // 5 second heartbeats
-      defaultWaitMs: 25000, // 25 seconds default
-      maxConcurrentPolls: 100, // Max concurrent polls per session
-      ...config
-    };
-
-    this.startHeartbeat();
-  }
+export class LongPollManager {
+  private activePolls = new Map<string, Set<FastifyReply>>();
+  private messageWatermarks = new Map<string, MessageWatermark>();
+  private checkIntervals = new Map<string, NodeJS.Timeout>();
 
   /**
-   * Start a long-poll request
+   * Start a long-polling request
    */
-  async startPoll(
+  async startLongPoll(
     sessionId: string,
-    clientId: string,
-    waitMs: number,
-    after?: string
-  ): Promise<LongPollResponse> {
-    // Validate wait time
-    const validatedWaitMs = Math.min(waitMs, this.config.maxWaitMs);
+    after: string | undefined,
+    options: LongPollOptions,
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    const { waitMs, timeout, checkInterval } = options;
     
-    // Check concurrent poll limit
-    const sessionPolls = this.activePolls.get(sessionId) || [];
-    if (sessionPolls.length >= this.config.maxConcurrentPolls) {
-      throw new Error('Too many concurrent polls for this session');
+    // Set up timeout
+    const timeoutId = setTimeout(() => {
+      this.endLongPoll(sessionId, reply);
+      reply.code(200).send([]);
+    }, Math.min(waitMs, timeout));
+
+    // Set up abort handling
+    request.raw.on('close', () => {
+      clearTimeout(timeoutId);
+      this.endLongPoll(sessionId, reply);
+    });
+
+    // Register this poll
+    if (!this.activePolls.has(sessionId)) {
+      this.activePolls.set(sessionId, new Set());
     }
-    
-    // Create abort controller for client cancellation
-    const abortController = new AbortController();
-    
-    // Create promise for long-poll
-    const pollPromise = new Promise<LongPollResponse>((resolve, reject) => {
-      const pollRequest: LongPollRequest = {
-        sessionId,
-        clientId,
-        after,
-        waitMs: validatedWaitMs,
-        startTime: new Date(),
-        abortController,
-        resolve,
-        reject
-      };
+    this.activePolls.get(sessionId)!.add(reply);
 
-      // Add to active polls
-      if (!this.activePolls.has(sessionId)) {
-        this.activePolls.set(sessionId, []);
-      }
-      this.activePolls.get(sessionId)!.push(pollRequest);
-
-      // Set up timeout
-      const timeout = setTimeout(() => {
-        this.cleanupPoll(sessionId, clientId);
-        resolve({
-          messages: [],
-          timestamp: new Date().toISOString(),
-          watermark: after
-        });
-      }, validatedWaitMs);
-
-      // Set up abort handler
-      abortController.signal.addEventListener('abort', () => {
-        clearTimeout(timeout);
-        this.cleanupPoll(sessionId, clientId);
-        reject(new Error('Client aborted long-poll'));
-      });
-
-      // Store timeout for cleanup
-      (pollRequest as any).timeout = timeout;
-    });
-
-    logger.info('Long-poll started', {
-      sessionId,
-      clientId,
-      waitMs: validatedWaitMs,
-      after
-    });
-
-    return pollPromise;
-  }
-
-  /**
-   * Deliver message to waiting polls
-   */
-  deliverMessage(sessionId: string, message: any): void {
-    const polls = this.activePolls.get(sessionId);
-    if (!polls || polls.length === 0) {
-      return;
-    }
-
-    logger.info('Delivering message to long-polls', {
-      sessionId,
-      activePolls: polls.length,
-      messageId: message.id
-    });
-
-    // Deliver to all waiting polls
-    polls.forEach(poll => {
+    // Set up periodic checking
+    const intervalId = setInterval(async () => {
       try {
-        // Clear timeout
-        if ((poll as any).timeout) {
-          clearTimeout((poll as any).timeout);
+        const newMessages = await this.checkForNewMessages(sessionId, after);
+        if (newMessages.length > 0) {
+          clearTimeout(timeoutId);
+          clearInterval(intervalId);
+          this.endLongPoll(sessionId, reply);
+          reply.code(200).send(newMessages);
         }
-
-        poll.resolve({
-          messages: [message],
-          timestamp: new Date().toISOString(),
-          watermark: message.createdAt || new Date().toISOString()
-        });
-        
-        this.cleanupPoll(sessionId, poll.clientId);
       } catch (error) {
-        logger.error('Error delivering message to poll', {
-          error: error instanceof Error ? error.message : "Unknown error",
-          sessionId,
-          clientId: poll.clientId
-        });
-        this.cleanupPoll(sessionId, poll.clientId);
+        clearTimeout(timeoutId);
+        clearInterval(intervalId);
+        this.endLongPoll(sessionId, reply);
+        reply.code(500).send({ error: 'LONGPOLL_FAILED', message: 'Failed to check for messages' });
       }
-    });
+    }, checkInterval);
+
+    this.checkIntervals.set(sessionId, intervalId);
   }
 
   /**
-   * Send heartbeat to all active polls
+   * Check for new messages since the given timestamp
    */
-  private sendHeartbeat(): void {
-    const now = new Date();
-    
-    for (const [sessionId, polls] of this.activePolls.entries()) {
-      polls.forEach(poll => {
-        try {
-          // Check if poll is still active and needs heartbeat
-          const elapsed = now.getTime() - poll.startTime.getTime();
-          if (elapsed >= this.config.heartbeatIntervalMs) {
-            poll.resolve({
-              heartbeat: true,
-              timestamp: now.toISOString(),
-              watermark: poll.after
-            });
-            
-            // Clean up this poll after heartbeat
-            this.cleanupPoll(sessionId, poll.clientId);
-          }
-        } catch (error) {
-          logger.error('Error sending heartbeat', {
-            error: error instanceof Error ? error.message : "Unknown error",
-            sessionId,
-            clientId: poll.clientId
-          });
-          this.cleanupPoll(sessionId, poll.clientId);
-        }
-      });
+  private async checkForNewMessages(sessionId: string, after?: string): Promise<any[]> {
+    // This would integrate with the actual message storage
+    // For now, we'll simulate checking for new messages
+    const messages = await this.getMessagesSince(sessionId, after);
+    return messages;
+  }
+
+  /**
+   * Get messages since a specific timestamp
+   */
+  private async getMessagesSince(sessionId: string, after?: string): Promise<any[]> {
+    // This would query the actual database
+    // For now, return empty array (no new messages)
+    return [];
+  }
+
+  /**
+   * Notify all active polls about new messages
+   */
+  notifyNewMessages(sessionId: string, messages: any[]): void {
+    const activePolls = this.activePolls.get(sessionId);
+    if (!activePolls) return;
+
+    for (const reply of activePolls) {
+      try {
+        reply.code(200).send(messages);
+      } catch (error) {
+        // Client disconnected, remove from active polls
+        activePolls.delete(reply);
+      }
+    }
+
+    // Clear all polls for this session
+    this.clearActivePolls(sessionId);
+  }
+
+  /**
+   * End a specific long-poll
+   */
+  private endLongPoll(sessionId: string, reply: FastifyReply): void {
+    const activePolls = this.activePolls.get(sessionId);
+    if (activePolls) {
+      activePolls.delete(reply);
+      if (activePolls.size === 0) {
+        this.clearActivePolls(sessionId);
+      }
     }
   }
 
   /**
-   * Abort specific client's poll
+   * Clear all active polls for a session
    */
-  abortPoll(sessionId: string, clientId: string): boolean {
-    const polls = this.activePolls.get(sessionId);
-    if (!polls) {
-      return false;
-    }
-
-    const poll = polls.find(p => p.clientId === clientId);
-    if (!poll) {
-      return false;
-    }
-
-    poll.abortController.abort();
-    this.cleanupPoll(sessionId, clientId);
-    
-    logger.info('Long-poll aborted', { sessionId, clientId });
-    
-    return true;
-  }
-
-  /**
-   * Abort all polls for a session
-   */
-  abortAllPolls(sessionId: string): void {
-    const polls = this.activePolls.get(sessionId);
-    if (!polls) {
-      return;
-    }
-
-    logger.info('Aborting all long-polls for session', {
-      sessionId,
-      pollCount: polls.length
-    });
-
-    polls.forEach(poll => {
-      poll.abortController.abort();
-    });
-
+  private clearActivePolls(sessionId: string): void {
     this.activePolls.delete(sessionId);
-  }
-
-  /**
-   * Clean up poll session
-   */
-  private cleanupPoll(sessionId: string, clientId: string): void {
-    const polls = this.activePolls.get(sessionId);
-    if (!polls) {
-      return;
-    }
-
-    const index = polls.findIndex(p => p.clientId === clientId);
-    if (index !== -1) {
-      const poll = polls[index];
-      
-      // Clear timeout if exists
-      if ((poll as any).timeout) {
-        clearTimeout((poll as any).timeout);
-      }
-      
-      polls.splice(index, 1);
-    }
-
-    // Remove session if no active polls
-    if (polls.length === 0) {
-      this.activePolls.delete(sessionId);
-    }
-  }
-
-  /**
-   * Get active poll count for session
-   */
-  getActivePollCount(sessionId: string): number {
-    const polls = this.activePolls.get(sessionId);
-    return polls ? polls.length : 0;
-  }
-
-  /**
-   * Get all active polls (for monitoring)
-   */
-  getAllActivePolls(): Array<{
-    sessionId: string;
-    clientId: string;
-    startTime: Date;
-    waitMs: number;
-    after?: string;
-  }> {
-    const result: Array<{
-      sessionId: string;
-      clientId: string;
-      startTime: Date;
-      waitMs: number;
-      after?: string;
-    }> = [];
     
-    for (const [sessionId, polls] of this.activePolls.entries()) {
-      polls.forEach(poll => {
-        result.push({
-          sessionId,
-          clientId: poll.clientId,
-          startTime: poll.startTime,
-          waitMs: poll.waitMs,
-          after: poll.after
-        });
-      });
-    }
-    
-    return result;
-  }
-
-  /**
-   * Clean up stale polls (older than max wait time)
-   */
-  cleanupStalePolls(): void {
-    const now = new Date();
-    const staleThreshold = new Date(now.getTime() - this.config.maxWaitMs);
-
-    for (const [sessionId, polls] of this.activePolls.entries()) {
-      const stalePolls = polls.filter(poll => poll.startTime < staleThreshold);
-      
-      stalePolls.forEach(poll => {
-        logger.warn('Cleaning up stale long-poll', {
-          sessionId,
-          clientId: poll.clientId,
-          age: now.getTime() - poll.startTime.getTime()
-        });
-        
-        poll.abortController.abort();
-        this.cleanupPoll(sessionId, poll.clientId);
-      });
+    const intervalId = this.checkIntervals.get(sessionId);
+    if (intervalId) {
+      clearInterval(intervalId);
+      this.checkIntervals.delete(sessionId);
     }
   }
 
   /**
-   * Start heartbeat interval
+   * Update watermark for a session
    */
-  private startHeartbeat(): void {
-    this.heartbeatInterval = setInterval(() => {
-      this.sendHeartbeat();
-      this.cleanupStalePolls();
-    }, this.config.heartbeatIntervalMs);
+  updateWatermark(sessionId: string, messageId: string, timestamp: string): void {
+    this.messageWatermarks.set(sessionId, {
+      sessionId,
+      lastMessageId: messageId,
+      lastTimestamp: timestamp
+    });
   }
 
   /**
-   * Stop heartbeat interval
+   * Get watermark for a session
    */
-  stop(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-
-    // Abort all active polls
-    for (const sessionId of this.activePolls.keys()) {
-      this.abortAllPolls(sessionId);
-    }
-  }
-
-  /**
-   * Get configuration
-   */
-  getConfig(): LongPollConfig {
-    return { ...this.config };
-  }
-
-  /**
-   * Update configuration
-   */
-  updateConfig(newConfig: Partial<LongPollConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-    
-    // Restart heartbeat if interval changed
-    if (newConfig.heartbeatIntervalMs) {
-      this.stop();
-      this.startHeartbeat();
-    }
+  getWatermark(sessionId: string): MessageWatermark | undefined {
+    return this.messageWatermarks.get(sessionId);
   }
 }
 
-// Singleton instance
-let longPollManager: LongPollManager | null = null;
-
-export function getLongPollManager(): LongPollManager {
-  if (!longPollManager) {
-    longPollManager = new LongPollManager();
-  }
-  return longPollManager;
-}
-
-export function initializeLongPolling(config?: Partial<LongPollConfig>): void {
-  if (longPollManager) {
-    longPollManager.stop();
-  }
-  
-  longPollManager = new LongPollManager(config);
-  
-  logger.info('Long-polling initialized', {
-    config: longPollManager.getConfig()
-  });
-}
-
-export function shutdownLongPolling(): void {
-  if (longPollManager) {
-    longPollManager.stop();
-    longPollManager = null;
-  }
-}
+// Global long-poll manager instance
+export const longPollManager = new LongPollManager();
