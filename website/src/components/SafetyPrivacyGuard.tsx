@@ -18,16 +18,18 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+interface PrivacySettings {
+  dataRetention: number;
+  encryptionLevel: 'standard' | 'enhanced' | 'military';
+  auditLogging: boolean;
+  gdprCompliance: boolean;
+  dataAnonymization: boolean;
+}
+
 interface SafetyPrivacyGuardProps {
   safetyLevel: 'low' | 'medium' | 'high' | 'critical';
-  privacySettings: {
-    dataRetention: number;
-    encryptionLevel: 'standard' | 'enhanced' | 'military';
-    auditLogging: boolean;
-    gdprCompliance: boolean;
-    dataAnonymization: boolean;
-  };
-  onSettingsUpdate: (settings: Partial<typeof privacySettings>) => void;
+  privacySettings: PrivacySettings;
+  onSettingsUpdate: (settings: Partial<PrivacySettings>) => void;
   onDataExport: () => Promise<void>;
   onDataDelete: () => Promise<void>;
   onRefresh: () => void;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SessionModeSelector } from '@/components/SessionModeSelector';
 import { MessageComposer } from '@/components/MessageComposer';
@@ -46,7 +46,7 @@ interface PrivacySettings {
   dataAnonymization: boolean;
 }
 
-export default function SessionPage() {
+function SessionPageContent() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState<'mode-select' | 'session' | 'convert'>('mode-select');
   const [session, setSession] = useState<Session | null>(null);
@@ -375,5 +375,13 @@ export default function SessionPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SessionPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SessionPageContent />
+    </Suspense>
   );
 }

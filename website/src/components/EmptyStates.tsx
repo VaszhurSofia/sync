@@ -12,7 +12,8 @@ import {
   Users, 
   ArrowRight,
   RefreshCw,
-  Pause
+  Pause,
+  Shield
 } from 'lucide-react';
 
 interface EmptyStatesProps {

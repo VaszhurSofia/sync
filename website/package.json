@@ -15,15 +15,21 @@
     "test:demo": "jest __tests__/demo.test.ts"
   },
   "dependencies": {
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
     "@sync/types": "file:../packages/types",
     "@sync/ui": "file:../packages/ui",
     "autoprefixer": "^10.4.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^10.16.0",
     "lucide-react": "^0.294.0",
     "next": "^14.0.0",
     "postcss": "^8.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
