@@ -23,39 +23,39 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: Brain,
-      title: 'AI-Powered Reflection',
-      description: 'Get intelligent insights and reflections on your conversations to deepen understanding.',
+      icon: Users,
+      title: 'Two Powerful Modes',
+      description: 'Choose between "Talk Together" (Couple) or "Reflect Alone" (Solo) sessions for different communication needs.',
       color: 'blue'
+    },
+    {
+      icon: Brain,
+      title: 'AI-Powered Insights',
+      description: 'Get intelligent reflections and guidance tailored to your chosen mode - couple facilitation or solo reflection.',
+      color: 'green'
     },
     {
       icon: MessageCircle,
       title: 'Real-time Communication',
-      description: 'Secure, encrypted messaging with long-polling for instant communication.',
-      color: 'green'
-    },
-    {
-      icon: Shield,
-      title: 'Enterprise Safety',
-      description: 'Advanced safety boundaries, EU compliance, and privacy protection built-in.',
+      description: 'Secure, encrypted messaging with long-polling for instant communication and turn-taking.',
       color: 'blue'
     },
     {
-      icon: Users,
-      title: 'Couple Management',
-      description: 'Easy couple creation, invites, and session management for seamless collaboration.',
+      icon: Shield,
+      title: 'Advanced Safety',
+      description: 'Tier-1 safety pre-checks, boundary detection, and EU compliance with privacy protection.',
       color: 'green'
     },
     {
       icon: Heart,
-      title: 'Relationship Insights',
-      description: '3-emoji feedback system with analytics to track relationship health.',
+      title: 'Solo to Couple Flow',
+      description: 'Seamlessly convert solo reflections into couple sessions with privacy controls and consent.',
       color: 'blue'
     },
     {
       icon: Lock,
-      title: 'Privacy First',
-      description: 'GDPR/CCPA compliant with hard delete functionality and audit logging.',
+      title: 'Privacy & Security',
+      description: 'GDPR/CCPA compliant with audit logging, data encryption, and hard delete functionality.',
       color: 'green'
     }
   ];
@@ -63,17 +63,17 @@ export default function HomePage() {
   const testimonials = [
     {
       name: 'Sarah & Michael',
-      text: 'Sync has transformed how we communicate. The AI insights help us understand each other better.',
+      text: 'The couple mode helps us communicate better, while solo mode lets us reflect privately. Perfect balance!',
       rating: 5
     },
     {
       name: 'Emma & David',
-      text: 'The safety features give us peace of mind, and the feedback system helps us track our progress.',
+      text: 'Love how we can start with solo reflection and then convert to couple sessions. The AI insights are incredible.',
       rating: 5
     },
     {
       name: 'Lisa & James',
-      text: 'Finally, a communication tool that respects our privacy while helping us grow together.',
+      text: 'The safety features and privacy controls give us complete confidence. Finally, a tool that truly understands couples.',
       rating: 5
     }
   ];
@@ -84,8 +84,9 @@ export default function HomePage() {
       price: '$0',
       period: '/month',
       features: [
-        'Basic AI reflection',
+        'Both Couple & Solo modes',
         'Up to 10 sessions/month',
+        'Basic AI insights',
         'Standard safety features',
         'Community support'
       ],
@@ -96,8 +97,9 @@ export default function HomePage() {
       price: '$19',
       period: '/month',
       features: [
+        'Unlimited Couple & Solo sessions',
         'Advanced AI insights',
-        'Unlimited sessions',
+        'Solo to Couple conversion',
         'Premium safety features',
         'Priority support',
         'Analytics dashboard'
@@ -110,11 +112,12 @@ export default function HomePage() {
       price: 'Custom',
       period: '',
       features: [
-        'Custom AI models',
+        'Custom AI models for both modes',
         'White-label solution',
+        'Advanced privacy controls',
         'Dedicated support',
-        'Advanced compliance',
-        'Custom integrations'
+        'Custom integrations',
+        'Audit logging & compliance'
       ],
       color: 'blue'
     }
@@ -196,8 +199,9 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Sync is the first AI-powered communication platform designed specifically for couples. 
-              Get intelligent insights, safety boundaries, and privacy-first design to deepen your connection.
+              Sync is the first AI-powered communication platform with two powerful modes: "Talk Together" for couples 
+              and "Reflect Alone" for solo reflection. Get intelligent insights, safety boundaries, and seamless 
+              conversion between modes to deepen your connection.
             </motion.p>
             
             <motion.div 
@@ -226,15 +230,103 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Modes Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4">
+              Choose Your Communication Style
+            </h2>
+            <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
+              Two powerful modes designed for different communication needs
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Couple Mode */}
+            <motion.div
+              className="card text-center"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex p-4 rounded-full bg-blue-light mb-6">
+                <Users className="h-8 w-8 text-blue-primary" />
+              </div>
+              <h3 className="text-2xl font-bold text-neutral-900 mb-4">
+                Talk Together
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                Perfect for couples who want to communicate and grow together. 
+                AI facilitates turn-taking and provides insights to deepen your connection.
+              </p>
+              <ul className="text-left space-y-2 mb-6">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-blue-primary mr-3" />
+                  <span>Turn-taking facilitation</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-blue-primary mr-3" />
+                  <span>Couple-focused AI insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-blue-primary mr-3" />
+                  <span>Real-time communication</span>
+                </li>
+              </ul>
+              <div className="text-sm text-blue-primary font-semibold">
+                Perfect for: Active couples communication
+              </div>
+            </motion.div>
+
+            {/* Solo Mode */}
+            <motion.div
+              className="card text-center"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="inline-flex p-4 rounded-full bg-green-light mb-6">
+                <Brain className="h-8 w-8 text-green-primary" />
+              </div>
+              <h3 className="text-2xl font-bold text-neutral-900 mb-4">
+                Reflect Alone
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                Ideal for personal reflection and self-discovery. 
+                AI provides gentle guidance and insights to help you understand yourself better.
+              </p>
+              <ul className="text-left space-y-2 mb-6">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-primary mr-3" />
+                  <span>Personal reflection space</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-primary mr-3" />
+                  <span>Solo-focused AI guidance</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-primary mr-3" />
+                  <span>Convert to couple sessions</span>
+                </li>
+              </ul>
+              <div className="text-sm text-green-primary font-semibold">
+                Perfect for: Personal growth & reflection
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-neutral-900 mb-4">
-              Everything You Need for Better Communication
+              Advanced Features
             </h2>
             <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
-              Built with privacy, safety, and AI at its core. Experience the future of couple communication.
+              Built with privacy, safety, and AI at its core. Experience the future of communication.
             </p>
           </div>
           
@@ -375,18 +467,28 @@ export default function HomePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-green-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Relationship?
+            Ready to Transform Your Communication?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of couples who are already using Sync to communicate better.
+            Choose between "Talk Together" or "Reflect Alone" modes. Join thousands of users who are already 
+            using Sync to communicate better and grow together.
           </p>
-          <Link 
-            href="/session"
-            className="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
-          >
-            Start Your Free Demo
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              href="/session"
+              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
+            >
+              Try Couple Mode
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+            <Link 
+              href="/session"
+              className="inline-flex items-center px-8 py-4 bg-green-500 text-white rounded-lg font-semibold text-lg hover:bg-green-600 transition-all shadow-lg hover:shadow-xl"
+            >
+              Try Solo Mode
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -400,7 +502,7 @@ export default function HomePage() {
                 <span className="text-xl font-bold">Sync</span>
               </div>
               <p className="text-neutral-400">
-                AI-powered communication for couples who want to grow together.
+                AI-powered communication with two modes: "Talk Together" for couples and "Reflect Alone" for solo reflection.
               </p>
             </div>
             
@@ -409,7 +511,9 @@ export default function HomePage() {
               <ul className="space-y-2 text-neutral-400">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/session" className="hover:text-white transition-colors">Demo</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors">Try Demo</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors">Couple Mode</Link></li>
+                <li><Link href="/session" className="hover:text-white transition-colors">Solo Mode</Link></li>
               </ul>
             </div>
             
