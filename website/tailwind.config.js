@@ -39,6 +39,36 @@ module.exports = {
         'neutral-800': '#1F2937',      // Very dark text (improved contrast)
         'neutral-900': '#111827',      // Darkest text (improved contrast)
         
+        // Gray color mappings (same as neutral for consistency)
+        'gray-50': '#FAFAFA',
+        'gray-100': '#F5F5F5',
+        'gray-200': '#E5E5E5',
+        'gray-300': '#D4D4D4',
+        'gray-400': '#9CA3AF',
+        'gray-500': '#6B7280',
+        'gray-600': '#4B5563',
+        'gray-700': '#374151',
+        'gray-800': '#1F2937',
+        'gray-900': '#111827',
+        
+        // Yellow/Amber colors for warnings
+        'yellow-50': '#FFFBEB',
+        'yellow-100': '#FEF3C7',
+        'yellow-200': '#FDE68A',
+        'yellow-500': '#F59E0B',
+        'yellow-600': '#D97706',
+        'yellow-700': '#B45309',
+        'yellow-800': '#92400E',
+        
+        // Red colors for errors (mapped to amber for softer look)
+        'red-50': '#FFFBEB',
+        'red-100': '#FEF3C7',
+        'red-200': '#FDE68A',
+        'red-500': '#F59E0B',
+        'red-600': '#D97706',
+        'red-700': '#B45309',
+        'red-800': '#92400E',
+        
         // Additional semantic colors
         'text-primary': '#1F2937',     // Primary text color
         'text-secondary': '#6B7280',   // Secondary text color

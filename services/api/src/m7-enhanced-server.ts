@@ -411,7 +411,7 @@ fastify.post('/sessions/:id/messages', {
         sender: 'ai',
         contentEnc: encrypt(aiMessageContent),
         createdAt: new Date(),
-        safetyTags: aiResponse.data.safety?.concerns || [],
+        safetyTags: (aiResponse.data as any)?.safety?.concerns || [],
         clientMessageId: uuidv4(),
       };
       messages.set(aiMessage.id, aiMessage);

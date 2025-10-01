@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@sync/types": ["./packages/types/dist"],
+      "@sync/ui": ["./packages/ui/dist"]
+    }
+  },
+  "include": [
+    "services/**/*",
+    "packages/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "website"
+  ],
+  "references": [
+    {
+      "path": "./services/api"
+    },
+    {
+      "path": "./services/ai"
+    },
+    {
+      "path": "./packages/types"
+    },
+    {
+      "path": "./packages/ui"
+    }
+  ]
+}

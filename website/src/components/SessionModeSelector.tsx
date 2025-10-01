@@ -34,7 +34,7 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
         <div className="grid md:grid-cols-2 gap-6">
           {/* Couple Session Card */}
           <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full ${
               selectedMode === 'couple' 
                 ? 'ring-2 ring-blue-500 bg-blue-50' 
                 : 'hover:shadow-md'
@@ -50,8 +50,8 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
                 Couple Session
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
+            <CardContent className="space-y-4 flex-grow flex flex-col">
+              <div className="space-y-3 flex-grow">
                 <div className="flex items-start space-x-3">
                   <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <p className="text-gray-700">
@@ -72,7 +72,7 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 mt-auto">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span className="flex items-center">
                     <Shield className="w-4 h-4 mr-1" />
@@ -89,7 +89,7 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
 
           {/* Solo Session Card */}
           <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full ${
               selectedMode === 'solo' 
                 ? 'ring-2 ring-green-500 bg-green-50' 
                 : 'hover:shadow-md'
@@ -105,8 +105,8 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
                 Solo Session
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
+            <CardContent className="space-y-4 flex-grow flex flex-col">
+              <div className="space-y-3 flex-grow">
                 <div className="flex items-start space-x-3">
                   <ArrowRight className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <p className="text-gray-700">
@@ -127,7 +127,7 @@ export function SessionModeSelector({ onModeSelect, isLoading = false }: Session
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 mt-auto">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span className="flex items-center">
                     <Shield className="w-4 h-4 mr-1" />
